@@ -1,20 +1,20 @@
 #include "NetworkModel.h"
 
-DownloadData NetworkModel::Download(int byteCount) {
-    DownloadData data{.TimeInMs = 0, .DownloadedByteCount = 0};
-    while (data.DownloadedByteCount < byteCount) {
+DownloadData NetworkModel::Download(int bitCount) {
+    DownloadData data{.TimeInMs = 0, .DownloadedBitCount = 0};
+    while (data.DownloadedBitCount < bitCount) {
         const auto restTimeInPeriodInMs = durationsInMs[period] - timeInPeriodInMs;
-        const auto restByteCapacityInPeriod = bandwidthsInKBps[period] * restTimeInPeriodInMs;
-        if (byteCount - data.DownloadedByteCount < restByteCapacityInPeriod) {
-            const auto elapsedTimeInMs = (byteCount - data.DownloadedByteCount) / bandwidthsInKBps[period];
+        const auto restBitCountInPeriod = throughputsInKbps[period] * restTimeInPeriodInMs;
+        if (bitCount - data.DownloadedBitCount < restBitCountInPeriod) {
+            const auto elapsedTimeInMs = (bitCount - data.DownloadedBitCount) / throughputsInKbps[period];
             timeInPeriodInMs += elapsedTimeInMs;
             data.TimeInMs += elapsedTimeInMs;
-            data.DownloadedByteCount = byteCount;
+            data.DownloadedBitCount = bitCount;
         } else {
             period = period < durationsInMs.size() - 1 ? period + 1 : 0;
             timeInPeriodInMs = 0;
             data.TimeInMs += restTimeInPeriodInMs;
-            data.DownloadedByteCount += restByteCapacityInPeriod;
+            data.DownloadedBitCount += restBitCountInPeriod;
         }
     }
     return data;

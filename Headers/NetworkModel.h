@@ -4,31 +4,31 @@
 
 struct DownloadData {
     int TimeInMs;
-    int DownloadedByteCount;
+    int DownloadedBitCount;
 };
 
 class NetworkModel {
 public:
     template<std::input_iterator InputIt>
     NetworkModel(InputIt durationsInMsFirst, InputIt durationsInMsLast,
-                 InputIt bandwidthsInKBpsFirst, InputIt bandwidthsInKBpsLast);
+                 InputIt throughputsInKbpsFirst, InputIt throughputsInKbpsLast);
 
-    DownloadData Download(int byteCount);
+    DownloadData Download(int bitCount);
 
     void Delay(int timeInMs);
 
 private:
     int period = 0, timeInPeriodInMs = 0;
-    std::vector<int> durationsInMs, bandwidthsInKBps;
+    std::vector<int> durationsInMs, throughputsInKbps;
 };
 
 template<std::input_iterator InputIt>
 NetworkModel::NetworkModel(InputIt durationsInMsFirst, InputIt durationsInMsLast,
-                           InputIt bandwidthsInKBpsFirst, InputIt bandwidthsInKBpsLast) {
+                           InputIt throughputsInKbpsFirst, InputIt throughputsInKbpsLast) {
     if (std::distance(durationsInMsFirst, durationsInMsLast) !=
-        std::distance(bandwidthsInKBpsFirst, bandwidthsInKBpsLast))
-        throw std::runtime_error("The duration list and bandwidth list have to be of equal size.");
+        std::distance(throughputsInKbpsFirst, throughputsInKbpsLast))
+        throw std::runtime_error("The duration and throughput list have to be of equal sizes.");
 
     durationsInMs.assign(durationsInMsFirst, durationsInMsLast);
-    bandwidthsInKBps.assign(bandwidthsInKBpsFirst, bandwidthsInKBpsLast);
+    throughputsInKbps.assign(throughputsInKbpsFirst, throughputsInKbpsLast);
 }
