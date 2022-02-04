@@ -9,21 +9,22 @@ NetworkModel NetworkModel::Import(std::string_view fileName) {
     return networkModel;
 }
 
-DownloadData NetworkModel::Download(int bitCount) {
-    DownloadData data{.TimeInMs = 0, .DownloadedBitCount = 0};
-    while (data.DownloadedBitCount < bitCount) {
+DownloadData NetworkModel::Download(int byteCount) {
+    DownloadData data{.TimeInMs = 0, .ByteCount = 0};
+    while (data.ByteCount < byteCount) {
         const auto restTimeInPeriodInMs = durationsInMs.at(period) - timeInPeriodInMs;
         const auto restBitCountInPeriod = throughputsInKbps.at(period) * restTimeInPeriodInMs;
-        if (bitCount - data.DownloadedBitCount < restBitCountInPeriod) {
-            const auto elapsedTimeInMs = (bitCount - data.DownloadedBitCount) / throughputsInKbps.at(period);
+        const auto restBitCountToDownload = (byteCount - data.ByteCount) * CHAR_BIT;
+        if (restBitCountToDownload < restBitCountInPeriod) {
+            const auto elapsedTimeInMs = restBitCountToDownload / throughputsInKbps.at(period);
             timeInPeriodInMs += elapsedTimeInMs;
             data.TimeInMs += elapsedTimeInMs;
-            data.DownloadedBitCount = bitCount;
+            data.ByteCount = byteCount;
         } else {
             period = period < durationsInMs.size() - 1 ? period + 1 : 0;
             timeInPeriodInMs = 0;
             data.TimeInMs += restTimeInPeriodInMs;
-            data.DownloadedBitCount += restBitCountInPeriod;
+            data.ByteCount += restBitCountInPeriod / CHAR_BIT;
         }
     }
     return data;

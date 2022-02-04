@@ -4,20 +4,18 @@
 
 struct DownloadData {
     int TimeInMs;
-    int DownloadedBitCount;
+    int ByteCount;
 };
 
 class NetworkModel {
 public:
     static NetworkModel Import(std::string_view fileName);
 
-    DownloadData Download(int bitCount);
+    DownloadData Download(int byteCount);
 
     void Delay(int timeInMs);
 
 private:
-    NetworkModel() = default;
-
     int period = 0, timeInPeriodInMs = 0;
     std::vector<int> durationsInMs, throughputsInKbps;
 };
