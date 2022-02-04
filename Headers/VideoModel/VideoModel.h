@@ -5,5 +5,7 @@
 struct VideoModel {
     int SegmentDurationInMs;
     std::vector<int> BitRatesInKbps;
-    std::vector<std::vector<int>> SegmentBitCounts;
+    std::vector<std::vector<int>> SegmentByteCounts;
+
+    static VideoModel Import(std::string_view fileName);
 };
