@@ -1,0 +1,4 @@
+{
+  "DurationsInMs": [1000, 1000, 2000, 1000],
+  "ThroughtputsInKbps": [1000, 2000, 1500, 500]
+}

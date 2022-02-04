@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Core.h"
-#include "NetworkModel.h"
+#include "Core/Core.h"
+#include "NetworkModel/NetworkModel.h"
 
 class AbstractThroughputEstimator {
 public:

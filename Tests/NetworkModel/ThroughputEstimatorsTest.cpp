@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "ThroughputEstimators.h"
+#include "NetworkModel/ThroughputEstimators.h"
 
 TEST(ExponentialMovingAverageEstimatorTest, ConstantThroughput) {
     ExponentialMovingAverageEstimator estimator;

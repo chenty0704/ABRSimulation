@@ -1,4 +1,4 @@
-#include "ThroughputEstimators.h"
+#include "NetworkModel/ThroughputEstimators.h"
 
 void AbstractThroughputEstimator::Push(DownloadData data) {
     const auto throughputInKbps = data.DownloadedBitCount / data.TimeInMs;
@@ -9,7 +9,7 @@ void AbstractThroughputEstimator::Push(DownloadData data) {
 
 ExponentialMovingAverageEstimator::ExponentialMovingAverageEstimator(int slowHalfLifeInMs, int fastHalfLifeInMs) {
     if (slowHalfLifeInMs <= 0 || fastHalfLifeInMs <= 0 || slowHalfLifeInMs < fastHalfLifeInMs)
-        throw std::runtime_error("Half life values are invalid.");
+        throw std::invalid_argument("Half life values are invalid.");
 
     ExponentialMovingAverageEstimator::slowHalfLifeInMs = slowHalfLifeInMs;
     ExponentialMovingAverageEstimator::fastHalfLifeInMs = fastHalfLifeInMs;
@@ -26,7 +26,7 @@ void ExponentialMovingAverageEstimator::Push(DownloadData data) {
 
 int ExponentialMovingAverageEstimator::EstimateInKbps() const {
     if (timeInMs == 0)
-        throw std::runtime_error("No sample exists.");
+        throw std::runtime_error("No samples exist.");
 
     const auto adjustedSlowEstimateInKbps = slowEstimateInKbps / (1 - std::pow(0.5, timeInMs / slowHalfLifeInMs));
     const auto adjustedFastEstimateInKbps = fastEstimateInKbps / (1 - std::pow(0.5, timeInMs / fastHalfLifeInMs));
