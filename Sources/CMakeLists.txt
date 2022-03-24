@@ -13,3 +13,6 @@ add_library(NetworkModel
         NetworkModel/NetworkModel.cpp
         NetworkModel/ThroughputEstimators.cpp)
 target_link_libraries(NetworkModel PRIVATE JSON)
+
+add_library(ABRControllers
+        ABRControllers/ThroughputBasedController.cpp)

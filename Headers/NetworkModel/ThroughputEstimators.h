@@ -9,22 +9,27 @@ public:
 
     [[nodiscard]] virtual size_t EstimateInKbps() const = 0;
 
+    virtual ~ThroughputEstimator() = default;
+
 protected:
     size_t timeInMs = 0;
     std::vector<size_t> durationsInMs, throughputsInKbps;
 };
 
+struct ExponentialMovingAverageEstimatorOptions {
+    size_t SlowHalfLifeInMs = 8'000;
+    size_t FastHalfLifeInMs = 3'000;
+};
+
 class ExponentialMovingAverageEstimator : public ThroughputEstimator {
 public:
-    ExponentialMovingAverageEstimator(size_t slowHalfLifeInMs, size_t fastHalfLifeInMs);
-
-    ExponentialMovingAverageEstimator() : ExponentialMovingAverageEstimator(8'000, 3'000) {}
+    explicit ExponentialMovingAverageEstimator(ExponentialMovingAverageEstimatorOptions opts = {}) : opts(opts) {}
 
     void Push(DownloadData data) override;
 
     [[nodiscard]] size_t EstimateInKbps() const override;
 
 private:
-    double slowHalfLifeInMs, fastHalfLifeInMs;
+    ExponentialMovingAverageEstimatorOptions opts;
     double slowEstimateInKbps = 0, fastEstimateInKbps = 0;
 };
