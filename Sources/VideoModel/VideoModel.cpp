@@ -4,8 +4,8 @@
 VideoModel VideoModel::Import(std::string_view fileName) {
     const auto obj = JSON::Import(fileName).as_object();
     return {
-            .SegmentDurationInMs = boost::json::value_to<int>(obj.at("SegmentDurationInMs")),
-            .BitRatesInKbps = boost::json::value_to<std::vector<int>>(obj.at("BitRatesInKbps")),
-            .SegmentByteCounts = boost::json::value_to<std::vector<std::vector<int>>>(obj.at("SegmentByteCounts"))
+            .SegmentDurationInMs = boost::json::value_to<size_t>(obj.at("SegmentDurationInMs")),
+            .BitRatesInKbps = boost::json::value_to<std::vector<size_t>>(obj.at("BitRatesInKbps")),
+            .SegmentByteCounts = boost::json::value_to<std::vector<std::vector<size_t>>>(obj.at("SegmentByteCounts"))
     };
 }

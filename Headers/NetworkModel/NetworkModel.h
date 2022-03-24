@@ -3,19 +3,19 @@
 #include "Core/Core.h"
 
 struct DownloadData {
-    int TimeInMs;
-    int ByteCount;
+    size_t TimeInMs;
+    size_t ByteCount;
 };
 
 class NetworkModel {
 public:
     static NetworkModel Import(std::string_view fileName);
 
-    DownloadData Download(int byteCount);
+    DownloadData Download(size_t byteCount);
 
-    void Delay(int timeInMs);
+    void Delay(size_t timeInMs);
 
 private:
-    int period = 0, timeInPeriodInMs = 0;
-    std::vector<int> durationsInMs, throughputsInKbps;
+    size_t period = 0, timeInPeriodInMs = 0;
+    std::vector<size_t> durationsInMs, throughputsInKbps;
 };

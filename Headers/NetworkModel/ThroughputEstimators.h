@@ -3,26 +3,26 @@
 #include "Core/Core.h"
 #include "NetworkModel/NetworkModel.h"
 
-class AbstractThroughputEstimator {
+class ThroughputEstimator {
 public:
     virtual void Push(DownloadData data);
 
-    [[nodiscard]] virtual int EstimateInKbps() const = 0;
+    [[nodiscard]] virtual size_t EstimateInKbps() const = 0;
 
 protected:
-    int timeInMs = 0;
-    std::vector<int> durationsInMs, throughputsInKbps;
+    size_t timeInMs = 0;
+    std::vector<size_t> durationsInMs, throughputsInKbps;
 };
 
-class ExponentialMovingAverageEstimator : public AbstractThroughputEstimator {
+class ExponentialMovingAverageEstimator : public ThroughputEstimator {
 public:
-    ExponentialMovingAverageEstimator(int slowHalfLifeInMs, int fastHalfLifeInMs);
+    ExponentialMovingAverageEstimator(size_t slowHalfLifeInMs, size_t fastHalfLifeInMs);
 
     ExponentialMovingAverageEstimator() : ExponentialMovingAverageEstimator(8'000, 3'000) {}
 
     void Push(DownloadData data) override;
 
-    [[nodiscard]] int EstimateInKbps() const override;
+    [[nodiscard]] size_t EstimateInKbps() const override;
 
 private:
     double slowHalfLifeInMs, fastHalfLifeInMs;
