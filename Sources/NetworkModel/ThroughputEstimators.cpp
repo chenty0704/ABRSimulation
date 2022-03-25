@@ -8,6 +8,7 @@ void ThroughputEstimator::Push(DownloadData data) {
 }
 
 void ExponentialMovingAverageEstimator::Push(DownloadData data) {
+    const auto &opts = dynamic_cast<const ExponentialMovingAverageEstimatorOptions &>(*ExponentialMovingAverageEstimator::opts);
     ThroughputEstimator::Push(data);
     const auto throughputInKbps = throughputsInKbps.back();
     const auto slowLastWeight =
@@ -22,6 +23,7 @@ void ExponentialMovingAverageEstimator::Push(DownloadData data) {
 
 size_t ExponentialMovingAverageEstimator::EstimateInKbps() const {
     assert(timeInMs > 0);
+    const auto &opts = dynamic_cast<const ExponentialMovingAverageEstimatorOptions &>(*ExponentialMovingAverageEstimator::opts);
     const auto slowWeight =
             1 - std::pow(0.5, static_cast<double>(timeInMs) / static_cast<double>(opts.SlowHalfLifeInMs));
     const auto fastWeight =
