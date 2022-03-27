@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Core/Core.h"
-#include "NetworkModel/ThroughputEstimators.h"
 #include "ABRControllers/ABRController.h"
 
 struct ThroughputBasedControllerOptions : ABRControllerOptions {
@@ -13,5 +11,5 @@ public:
     explicit ThroughputBasedController(const ThroughputBasedControllerOptions &opts = {})
             : ABRController(std::make_unique<ThroughputBasedControllerOptions>(opts)) {}
 
-    DownloadDecision GetDownloadDecision(SessionContext ctx) override;
+    DownloadDecision GetDownloadDecision(const SessionContext &ctx) override;
 };

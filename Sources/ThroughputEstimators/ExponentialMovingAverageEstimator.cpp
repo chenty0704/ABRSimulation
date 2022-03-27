@@ -1,11 +1,4 @@
-#include "NetworkModel/ThroughputEstimators.h"
-
-void ThroughputEstimator::Push(DownloadData data) {
-    const auto throughputInKbps = data.ByteCount * CHAR_BIT / data.TimeInMs;
-    timeInMs += data.TimeInMs;
-    durationsInMs.push_back(data.TimeInMs);
-    throughputsInKbps.push_back(throughputInKbps);
-}
+#include "ThroughputEstimators/ExponentialMovingAverageEstimator.h"
 
 void ExponentialMovingAverageEstimator::Push(DownloadData data) {
     const auto &opts = dynamic_cast<const ExponentialMovingAverageEstimatorOptions &>(*ExponentialMovingAverageEstimator::opts);

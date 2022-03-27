@@ -2,12 +2,12 @@
 
 #include "Core/Core.h"
 #include "VideoModel/VideoModel.h"
+#include "ThroughputEstimators/ThroughputEstimator.h"
 
-struct SessionContext { // NOLINT(cppcoreguidelines-pro-type-member-init)
-    size_t MaxBufferSizeInSegments;
-    size_t PlaybackTimeInMs;
+struct SessionContext {
+    size_t PlaybackSegmentID = 0, PlaybackTimeInSegmentInMs = 0;
     std::reference_wrapper<const VideoModel> VideoModel;
-    std::span<const std::optional<size_t>> DownloadedBitRateIDs;
+    std::span<const std::optional<size_t>> DownloadedBitRatesInKbps;
     std::reference_wrapper<const ThroughputEstimator> ThroughputEstimator;
 };
 
@@ -24,7 +24,7 @@ class ABRController {
 public:
     explicit ABRController(std::unique_ptr<ABRControllerOptions> opts) : opts(std::move(opts)) {}
 
-    virtual DownloadDecision GetDownloadDecision(SessionContext ctx) = 0;
+    virtual DownloadDecision GetDownloadDecision(const SessionContext &ctx) = 0;
 
     virtual ~ABRController() = default;
 

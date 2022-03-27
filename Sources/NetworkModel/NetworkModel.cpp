@@ -22,8 +22,7 @@ DownloadData NetworkModel::Download(size_t byteCount) {
             data.TimeInMs += elapsedTimeInMs;
             bitCount = byteCount * CHAR_BIT;
         } else {
-            period = period < durationsInMs.size() - 1 ? period + 1 : 0;
-            timeInPeriodInMs = 0;
+            period = period < durationsInMs.size() - 1 ? period + 1 : 0, timeInPeriodInMs = 0;
             data.TimeInMs += restTimeInPeriodInMs;
             bitCount += restBitCountInPeriod;
         }
@@ -33,16 +32,15 @@ DownloadData NetworkModel::Download(size_t byteCount) {
 }
 
 void NetworkModel::Delay(size_t timeInMs) {
-    size_t delayedTimeInMs = 0;
-    while (delayedTimeInMs < timeInMs) {
+    size_t delayInMs = 0;
+    while (delayInMs < timeInMs) {
         const auto restTimeInPeriodInMs = durationsInMs.at(period) - timeInPeriodInMs;
-        if (timeInMs - delayedTimeInMs < restTimeInPeriodInMs) {
-            timeInPeriodInMs += timeInMs - delayedTimeInMs;
-            delayedTimeInMs = timeInMs;
+        if (timeInMs - delayInMs < restTimeInPeriodInMs) {
+            timeInPeriodInMs += timeInMs - delayInMs;
+            delayInMs = timeInMs;
         } else {
-            period = period < durationsInMs.size() - 1 ? period + 1 : 0;
-            timeInPeriodInMs = 0;
-            delayedTimeInMs += restTimeInPeriodInMs;
+            period = period < durationsInMs.size() - 1 ? period + 1 : 0, timeInPeriodInMs = 0;
+            delayInMs += restTimeInPeriodInMs;
         }
     }
 }
