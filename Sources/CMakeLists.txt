@@ -1,4 +1,3 @@
-find_package(LLU REQUIRED CONFIG PATH_SUFFIXES LLU)
 find_package(Boost REQUIRED COMPONENTS json)
 
 add_library(JSON
