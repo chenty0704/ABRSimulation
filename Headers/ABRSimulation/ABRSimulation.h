@@ -6,6 +6,10 @@
 #include "ThroughputEstimators/ThroughputEstimator.h"
 #include "ABRControllers/ABRController.h"
 
+struct SessionOptions {
+    size_t MaxBufferSegmentCount = 5;
+};
+
 struct SimulationData {
     size_t TotalTimeInMs = 0;
     std::vector<std::optional<size_t>> DownloadedBitRatesInKbps;
@@ -14,13 +18,9 @@ struct SimulationData {
 };
 
 namespace ABRSimulation {
-    struct SimulationSessionOptions {
-        size_t MaxBufferSegmentCount = 5;
-    };
-
     SimulationData SimulateSession(const VideoModel &videoModel,
                                    NetworkModel &networkModel,
                                    ABRController &controller,
                                    ThroughputEstimator &throughputEstimator,
-                                   const SimulationSessionOptions &opts = {});
+                                   const SessionOptions &opts = {});
 }

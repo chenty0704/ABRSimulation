@@ -1,2 +1,6 @@
+# Ignores CLion artifacts.
 /.idea/
 /cmake-build-*/
+
+# Ignores Wolfram notebooks.
+*.nb

@@ -1,15 +1,14 @@
-set(LLU_ROOT "$ENV{ProgramFiles}/Wolfram Research/LibraryLinkUtilities/${CMAKE_BUILD_TYPE}"
-        CACHE PATH "Path to LLU installation.")
-find_package(LLU REQUIRED CONFIG PATH_SUFFIXES LLU)
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}"
+            CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
+endif ()
 
-add_library(ABRSimulationInterface
-        Sources/ABRSimulationInterface.cpp)
-target_link_libraries(ABRSimulationInterface PRIVATE LLU::LLU)
-set_property(TARGET ABRSimulationInterface PROPERTY PREFIX "")
-set_windows_static_runtime(ABRSimulationInterface)
+include_directories(Headers)
+
+add_subdirectory(Sources)
 
 install_paclet_files(
         TARGET ABRSimulationInterface
         LLU_LOCATION ${LLU_ROOT}
-        PACLET_NAME ${PROJECT_NAME}
+        PACLET_NAME ABRSimulation
 )

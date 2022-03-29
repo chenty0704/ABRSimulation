@@ -1,8 +1,9 @@
 (* ::Package:: *)
 
-Paclet[
-	"Name" -> "@PROJECT_NAME",
-	"Extensions" -> {
-		{"Kernel", Root -> "Kernel", Context -> "@PROJECT_NAME@`"}
-	}
-]
+PacletObject[<|
+  "Name" -> "ABRSimulation",
+  "Version" -> "1.0",
+  "Extensions" -> {
+    {"Kernel", Root -> "Kernel", Context -> "ABRSimulation`"}
+  }
+|>]

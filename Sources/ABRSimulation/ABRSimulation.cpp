@@ -4,7 +4,7 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
                                               NetworkModel &networkModel,
                                               ABRController &controller,
                                               ThroughputEstimator &throughputEstimator,
-                                              const SimulationSessionOptions &opts) {
+                                              const SessionOptions &opts) {
     SimulationData simData;
     simData.DownloadedBitRatesInKbps.resize(videoModel.SegmentCount());
     SessionContext ctx{
