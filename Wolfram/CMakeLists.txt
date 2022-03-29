@@ -7,8 +7,6 @@ include_directories(Headers)
 
 add_subdirectory(Sources)
 
-install_paclet_files(
-        TARGET ABRSimulationInterface
+install_paclet_files(TARGET ABRSimulationInterface
         LLU_LOCATION ${LLU_ROOT}
-        PACLET_NAME ABRSimulation
-)
+        PACLET_NAME ABRSimulation)

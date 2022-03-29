@@ -25,9 +25,11 @@ namespace LLU {
     auto &operator<<(WSStream<EIn, EOut> &stream, const SimulationData &simData) {
         return stream << WS::Association(4)
                       << WS::Rule << "TotalTimeInMs" << simData.TotalTimeInMs
-                      << WS::Rule << "DownloadedBitRatesInKbps" << simData.DownloadedBitRatesInKbps
+                      << WS::Rule << "BufferedBitRatesInKbps" << simData.BufferedBitRatesInKbps
                       << WS::Rule << "RebufferingDurationsInMs" << simData.RebufferingDurationsInMs
-                      << WS::Rule << "FullBufferDelaysInMs" << simData.FullBufferDelaysInMs;
+                      << WS::Rule << "FullBufferDelaysInMs" << simData.FullBufferDelaysInMs
+                      << WS::Rule << "DownloadDurationsInMs" << simData.DownloadDurationsInMs
+                      << WS::Rule << "DownloadBitRatesInKbps" << simData.DownloadBitRatesInKbps;
     }
 }
 

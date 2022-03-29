@@ -6,70 +6,78 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
                                               ThroughputEstimator &throughputEstimator,
                                               const SessionOptions &opts) {
     SimulationData simData;
-    simData.DownloadedBitRatesInKbps.resize(videoModel.SegmentCount());
+    simData.BufferedBitRatesInKbps.resize(videoModel.SegmentCount());
     SessionContext ctx{
             .VideoModel = videoModel,
-            .DownloadedBitRatesInKbps = simData.DownloadedBitRatesInKbps,
+            .BufferedBitRatesInKbps = simData.BufferedBitRatesInKbps,
             .ThroughputEstimator = throughputEstimator
     };
 
+    const auto DownloadSegment = [&](DownloadDecision decision) {
+        assert(ctx.PlaybackTimeInSegmentInMs > 0 ? decision.SegmentID > ctx.PlaybackSegmentID
+                                                 : decision.SegmentID >= ctx.PlaybackSegmentID);
+        assert(decision.SegmentID <= ctx.NextSegmentID);
+        const auto segmentByteCount = videoModel.SegmentByteCounts.at(decision.SegmentID).at(decision.BitRateID);
+        const auto downloadData = networkModel.Download(segmentByteCount);
+        throughputEstimator.Push(downloadData);
+        simData.TotalTimeInMs += downloadData.TimeInMs;
+        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
+        simData.DownloadDurationsInMs.push_back(downloadData.TimeInMs);
+        simData.DownloadBitRatesInKbps.push_back(segmentByteCount / videoModel.SegmentDurationInMs);
+        if (decision.SegmentID == ctx.NextSegmentID) ++ctx.NextSegmentID;
+        return downloadData;
+    };
+
     // Downloads the first segment at the lowest bit rate.
-    auto segmentByteCount = videoModel.SegmentByteCounts.at(0).at(0);
-    auto downloadData = networkModel.Download(segmentByteCount);
-    throughputEstimator.Push(downloadData);
-    simData.DownloadedBitRatesInKbps.at(0) = videoModel.BitRatesInKbps.at(0);
-    simData.TotalTimeInMs += downloadData.TimeInMs;
+    DownloadSegment({ctx.NextSegmentID, 0});
 
     // Downloads the rest of the segments.
-    while (!simData.DownloadedBitRatesInKbps.back().has_value()) {
+    while (!simData.BufferedBitRatesInKbps.back().has_value()) {
         auto bufferEndSegmentID =
                 std::min(ctx.PlaybackSegmentID + opts.MaxBufferSegmentCount, videoModel.SegmentCount());
 
         // Waits until the buffer is not full.
-        if (simData.DownloadedBitRatesInKbps.at(bufferEndSegmentID - 1).has_value()) {
+        if (ctx.NextSegmentID == bufferEndSegmentID) {
             const auto delayInMs = videoModel.SegmentDurationInMs - ctx.PlaybackTimeInSegmentInMs;
             ++ctx.PlaybackSegmentID, ctx.PlaybackTimeInSegmentInMs = 0;
             ++bufferEndSegmentID;
             networkModel.Delay(delayInMs);
             simData.FullBufferDelaysInMs.push_back(delayInMs);
+            simData.DownloadDurationsInMs.push_back(delayInMs);
+            simData.DownloadBitRatesInKbps.push_back(0);
         }
 
         // Downloads a new or existing segment.
         const auto decision = controller.GetDownloadDecision(ctx);
-        assert(ctx.PlaybackTimeInSegmentInMs > 0 ? decision.SegmentID > ctx.PlaybackSegmentID
-                                                 : decision.SegmentID >= ctx.PlaybackSegmentID);
-        assert(decision.SegmentID < bufferEndSegmentID);
-        segmentByteCount = videoModel.SegmentByteCounts.at(decision.SegmentID).at(decision.BitRateID);
-        downloadData = networkModel.Download(segmentByteCount);
-        throughputEstimator.Push(downloadData);
+        const auto downloadData = DownloadSegment(decision);
 
         // Plays the buffer content while downloading.
-        size_t downloadTimeInMs = 0;
-        while (downloadTimeInMs < downloadData.TimeInMs &&
-               simData.DownloadedBitRatesInKbps.at(ctx.PlaybackSegmentID).has_value()) {
+        size_t playbackTimeInMs = 0;
+        while (playbackTimeInMs < downloadData.TimeInMs &&
+               simData.BufferedBitRatesInKbps.at(ctx.PlaybackSegmentID).has_value()) {
             const auto restTimeInSegmentInMs = videoModel.SegmentDurationInMs - ctx.PlaybackTimeInSegmentInMs;
-            if (downloadData.TimeInMs - downloadTimeInMs < restTimeInSegmentInMs) {
-                ctx.PlaybackTimeInSegmentInMs += downloadData.TimeInMs - downloadTimeInMs;
-                downloadTimeInMs = downloadData.TimeInMs;
+            if (downloadData.TimeInMs - playbackTimeInMs < restTimeInSegmentInMs) {
+                ctx.PlaybackTimeInSegmentInMs += downloadData.TimeInMs - playbackTimeInMs;
+                playbackTimeInMs = downloadData.TimeInMs;
             } else {
                 ++ctx.PlaybackSegmentID, ctx.PlaybackTimeInSegmentInMs = 0;
-                downloadTimeInMs += restTimeInSegmentInMs;
+                playbackTimeInMs += restTimeInSegmentInMs;
             }
         }
 
         // Triggers rebuffering if there isn't enough buffer content to play.
-        if (downloadTimeInMs < downloadData.TimeInMs)
-            simData.RebufferingDurationsInMs.push_back(downloadData.TimeInMs - downloadTimeInMs);
-
-        // Places the downloaded segment in the buffer.
-        simData.DownloadedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
-        simData.TotalTimeInMs += downloadData.TimeInMs;
+        if (playbackTimeInMs < downloadData.TimeInMs)
+            simData.RebufferingDurationsInMs.push_back(downloadData.TimeInMs - playbackTimeInMs);
     }
 
     // Plays the rest of the buffer content.
-    if (ctx.PlaybackSegmentID < videoModel.SegmentCount())
-        simData.TotalTimeInMs += (videoModel.SegmentCount() - ctx.PlaybackSegmentID) * videoModel.SegmentDurationInMs
-                                 - ctx.PlaybackTimeInSegmentInMs;
+    if (ctx.PlaybackSegmentID < videoModel.SegmentCount()) {
+        const auto restPlaybackTimeInMs = (videoModel.SegmentCount() - ctx.PlaybackSegmentID)
+                                          * videoModel.SegmentDurationInMs - ctx.PlaybackTimeInSegmentInMs;
+        simData.TotalTimeInMs += restPlaybackTimeInMs;
+        simData.DownloadDurationsInMs.push_back(restPlaybackTimeInMs);
+        simData.DownloadBitRatesInKbps.push_back(0);
+    }
 
     return simData;
 }

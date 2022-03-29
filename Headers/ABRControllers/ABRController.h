@@ -5,9 +5,10 @@
 #include "ThroughputEstimators/ThroughputEstimator.h"
 
 struct SessionContext {
+    size_t NextSegmentID = 0;
     size_t PlaybackSegmentID = 0, PlaybackTimeInSegmentInMs = 0;
     std::reference_wrapper<const VideoModel> VideoModel;
-    std::span<const std::optional<size_t>> DownloadedBitRatesInKbps;
+    std::span<const std::optional<size_t>> BufferedBitRatesInKbps;
     std::reference_wrapper<const ThroughputEstimator> ThroughputEstimator;
 };
 
@@ -30,5 +31,4 @@ public:
 
 protected:
     std::unique_ptr<ABRControllerOptions> opts;
-    size_t nextSegmentID = 1;
 };

@@ -32,10 +32,12 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
     If[OptionValue["SessionOptions"] == Automatic, <||>, OptionValue["SessionOptions"]]
   ]},
   Return[<|
-    "TotalTime" -> Quantity[simData["TotalTimeInMs"], "Milliseconds"],
-    "DownloadedBitRates" -> QuantityArray[simData["DownloadedBitRatesInKbps"], "Kilobits" / "Seconds"],
+    "TotalTime" -> UnitConvert[Quantity[simData["TotalTimeInMs"], "Milliseconds"], "Seconds"],
+    "BufferedBitRates" -> QuantityArray[simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
     "RebufferingDurations" -> QuantityArray[simData["RebufferingDurationsInMs"], "Milliseconds"],
-    "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"]
+    "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"],
+    "DownloadDurations" -> QuantityArray[simData["DownloadDurationsInMs"], "Milliseconds"],
+    "DownloadBitRates" -> QuantityArray[simData["DownloadBitRatesInKbps"], "Kilobits" / "Seconds"]
   |>]
 ];
 

@@ -12,9 +12,11 @@ struct SessionOptions {
 
 struct SimulationData {
     size_t TotalTimeInMs = 0;
-    std::vector<std::optional<size_t>> DownloadedBitRatesInKbps;
+    std::vector<std::optional<size_t>> BufferedBitRatesInKbps;
     std::vector<size_t> RebufferingDurationsInMs;
     std::vector<size_t> FullBufferDelaysInMs;
+    std::vector<size_t> DownloadDurationsInMs;
+    std::vector<size_t> DownloadBitRatesInKbps;
 };
 
 namespace ABRSimulation {
