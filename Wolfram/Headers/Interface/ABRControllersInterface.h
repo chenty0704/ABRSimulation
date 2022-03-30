@@ -8,9 +8,9 @@
 namespace LLU {
     template<WS::Encoding EIn, WS::Encoding EOut>
     auto &operator>>(WSStream<EIn, EOut> &stream, ThroughputBasedControllerOptions &opts) {
-        WS::Association assoc;
-        stream >> assoc;
-        for (auto i = 0; i < assoc.getArgc(); ++i) {
+        WS::List rules;
+        stream >> rules;
+        for (auto i = 0; i < rules.getArgc(); ++i) {
             std::string key;
             stream >> WS::Rule >> key;
             if (key == "SafetyFactor") stream >> opts.SafetyFactor;

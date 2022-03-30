@@ -16,28 +16,36 @@ Get[FileNameJoin[{$PacletDirectory, "LibraryResources", "LibraryLinkUtilities.wl
 };
 
 Options[ABRSessionSimulate] = {
-  "ControllerType" -> "ThroughputBasedController",
-  "ControllerOptions" -> Automatic,
-  "ThroughputEstimatorType" -> "ExponentialMovingAverageEstimator",
-  "ThroughputEstimatorOptions" -> Automatic,
+  "Controller" -> {"ThroughputBasedController", Automatic},
+  "ThroughputEstimator" -> {"ExponentialMovingAverageEstimator", Automatic},
   "SessionOptions" -> Automatic
 };
-ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPattern[]] := With[
-  {simData = $ABRSessionSimulate[
+ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPattern[]] := Module[
+  {controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData},
+
+  controllerType = First@OptionValue["Controller"];
+  controllerOpts = Rest@OptionValue["Controller"];
+  If[controllerOpts == {Automatic}, controllerOpts = {}];
+  throughputEstimatorType = First@OptionValue["ThroughputEstimator"];
+  throughputEstimatorOpts = Rest@OptionValue["ThroughputEstimator"];
+  If[throughputEstimatorOpts == {Automatic}, throughputEstimatorOpts = {}];
+  sessionOpts = OptionValue["SessionOptions"];
+  If[sessionOpts == Automatic, sessionOpts = {}];
+
+  simData = $ABRSessionSimulate[
     videoModelFile, networkModelFile,
-    OptionValue["ControllerType"],
-    If[OptionValue["ControllerOptions"] == Automatic, <||>, OptionValue["ControllerOptions"]],
-    OptionValue["ThroughputEstimatorType"],
-    If[OptionValue["ThroughputEstimatorOptions"] == Automatic, <||>, OptionValue["ThroughputEstimatorOptions"]],
-    If[OptionValue["SessionOptions"] == Automatic, <||>, OptionValue["SessionOptions"]]
-  ]},
+    controllerType, controllerOpts,
+    throughputEstimatorType, throughputEstimatorOpts,
+    sessionOpts
+  ];
   Return[<|
-    "TotalTime" -> UnitConvert[Quantity[simData["TotalTimeInMs"], "Milliseconds"], "Seconds"],
-    "BufferedBitRates" -> QuantityArray[simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
-    "RebufferingDurations" -> QuantityArray[simData["RebufferingDurationsInMs"], "Milliseconds"],
-    "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"],
-    "DownloadDurations" -> QuantityArray[simData["DownloadDurationsInMs"], "Milliseconds"],
-    "DownloadBitRates" -> QuantityArray[simData["DownloadBitRatesInKbps"], "Kilobits" / "Seconds"]
+    "TotalTime" -> UnitConvert[Quantity[N@simData["TotalTimeInMs"], "Milliseconds"], "Seconds"],
+    "BufferedBitRates" -> QuantityArray[N@simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
+    "RebufferingDurations" -> QuantityArray[N@simData["RebufferingDurationsInMs"], "Milliseconds"],
+    "FullBufferDelays" -> QuantityArray[N@simData["FullBufferDelaysInMs"], "Milliseconds"],
+    "DownloadTimeSeries" -> TimeSeries[QuantityArray[N@Prepend[simData["DownloadBitRatesInKbps"], 0], "Kilobits" / "Seconds"],
+      {Prepend[QuantityMagnitude[Accumulate[QuantityArray[N@simData["DownloadDurationsInMs"], "Milliseconds"]], "Seconds"], 0]},
+      ResamplingMethod -> {"Interpolation", "HoldFrom" -> Right}]
   |>]
 ];
 

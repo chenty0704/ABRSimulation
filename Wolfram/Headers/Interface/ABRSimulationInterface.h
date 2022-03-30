@@ -10,9 +10,9 @@
 namespace LLU {
     template<WS::Encoding EIn, WS::Encoding EOut>
     auto &operator>>(WSStream<EIn, EOut> &stream, SessionOptions &opts) {
-        WS::Association assoc;
-        stream >> assoc;
-        for (auto i = 0; i < assoc.getArgc(); ++i) {
+        WS::List rules;
+        stream >> rules;
+        for (auto i = 0; i < rules.getArgc(); ++i) {
             std::string key;
             stream >> WS::Rule >> key;
             if (key == "MaxBufferSegmentCount") stream >> opts.MaxBufferSegmentCount;
@@ -23,7 +23,7 @@ namespace LLU {
 
     template<WS::Encoding EIn, WS::Encoding EOut>
     auto &operator<<(WSStream<EIn, EOut> &stream, const SimulationData &simData) {
-        return stream << WS::Association(4)
+        return stream << WS::Association(6)
                       << WS::Rule << "TotalTimeInMs" << simData.TotalTimeInMs
                       << WS::Rule << "BufferedBitRatesInKbps" << simData.BufferedBitRatesInKbps
                       << WS::Rule << "RebufferingDurationsInMs" << simData.RebufferingDurationsInMs
@@ -36,9 +36,9 @@ namespace LLU {
 /// \param videoModelFile:String
 /// \param networkModelFile:String
 /// \param controllerType:String
-/// \param controllerOptions:Association
+/// \param controllerOptions:List[Rule, ...]
 /// \param throughputEstimatorType:String
-/// \param throughputEstimatorOptions:Association
-/// \param sessionOptions:Association
+/// \param throughputEstimatorOptions:List[Rule, ...]
+/// \param sessionOptions:List[Rule, ...]
 /// \return Association
 extern "C" DLLEXPORT int ABRSessionSimulate(WolframLibraryData libData, WSLINK wslink);
