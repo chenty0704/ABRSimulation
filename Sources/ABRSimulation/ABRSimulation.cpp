@@ -21,7 +21,6 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         const auto downloadData = networkModel.Download(segmentByteCount);
         throughputEstimator.Push(downloadData);
         simData.TotalTimeInMs += downloadData.TimeInMs;
-        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
         simData.DownloadDurationsInMs.push_back(downloadData.TimeInMs);
         simData.DownloadBitRatesInKbps.push_back(segmentByteCount * CHAR_BIT / videoModel.SegmentDurationInMs);
         if (decision.SegmentID == ctx.NextSegmentID) ++ctx.NextSegmentID;
@@ -29,7 +28,9 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
     };
 
     // Downloads the first segment at the lowest bit rate.
-    DownloadSegment({ctx.NextSegmentID, 0});
+    DownloadDecision decision{ctx.NextSegmentID, 0};
+    DownloadSegment(decision);
+    simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
 
     // Downloads the rest of the segments.
     while (!simData.BufferedBitRatesInKbps.back().has_value()) {
@@ -49,7 +50,7 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         }
 
         // Downloads a new or existing segment.
-        const auto decision = controller.GetDownloadDecision(ctx);
+        decision = controller.GetDownloadDecision(ctx);
         const auto downloadData = DownloadSegment(decision);
 
         // Plays the buffer content while downloading.
@@ -65,10 +66,11 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
                 playbackTimeInMs += restTimeInSegmentInMs;
             }
         }
-
-        // Triggers rebuffering if there isn't enough buffer content to play.
         if (playbackTimeInMs < downloadData.TimeInMs)
             simData.RebufferingDurationsInMs.push_back(downloadData.TimeInMs - playbackTimeInMs);
+
+        // Places the downloaded segment in the buffer.
+        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
     }
 
     // Plays the rest of the buffer content.
