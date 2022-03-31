@@ -11,11 +11,11 @@ namespace LLU {
         WS::List rules;
         stream >> rules;
         for (auto i = 0; i < rules.getArgc(); ++i) {
-            std::string key;
-            stream >> WS::Rule >> key;
-            if (key == "SlowHalfLifeInMs") stream >> opts.SlowHalfLifeInMs;
-            else if (key == "FastHalfLifeInMs") stream >> opts.FastHalfLifeInMs;
-            else std::abort();
+            std::string opt;
+            stream >> WS::Rule >> opt;
+            if (opt == "SlowHalfLifeInMs") stream >> opts.SlowHalfLifeInMs;
+            else if (opt == "FastHalfLifeInMs") stream >> opts.FastHalfLifeInMs;
+            else ErrorManager::throwException("UnknownOptionError", opt);
         }
         return stream;
     }

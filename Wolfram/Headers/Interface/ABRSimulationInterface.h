@@ -13,10 +13,10 @@ namespace LLU {
         WS::List rules;
         stream >> rules;
         for (auto i = 0; i < rules.getArgc(); ++i) {
-            std::string key;
-            stream >> WS::Rule >> key;
-            if (key == "MaxBufferSegmentCount") stream >> opts.MaxBufferSegmentCount;
-            else std::abort();
+            std::string opt;
+            stream >> WS::Rule >> opt;
+            if (opt == "MaxBufferSegmentCount") stream >> opts.MaxBufferSegmentCount;
+            else ErrorManager::throwException("UnknownOptionError", opt);
         }
         return stream;
     }
@@ -26,10 +26,10 @@ namespace LLU {
         return stream << WS::Association(6)
                       << WS::Rule << "TotalTimeInMs" << simData.TotalTimeInMs
                       << WS::Rule << "BufferedBitRatesInKbps" << simData.BufferedBitRatesInKbps
-                      << WS::Rule << "RebufferingDurationsInMs" << simData.RebufferingDurationsInMs
-                      << WS::Rule << "FullBufferDelaysInMs" << simData.FullBufferDelaysInMs
                       << WS::Rule << "DownloadDurationsInMs" << simData.DownloadDurationsInMs
-                      << WS::Rule << "DownloadBitRatesInKbps" << simData.DownloadBitRatesInKbps;
+                      << WS::Rule << "DownloadBitRatesInKbps" << simData.DownloadBitRatesInKbps
+                      << WS::Rule << "RebufferingDurationsInMs" << simData.RebufferingDurationsInMs
+                      << WS::Rule << "FullBufferDelaysInMs" << simData.FullBufferDelaysInMs;
     }
 }
 

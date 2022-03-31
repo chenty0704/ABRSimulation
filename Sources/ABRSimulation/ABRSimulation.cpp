@@ -23,7 +23,7 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         simData.TotalTimeInMs += downloadData.TimeInMs;
         simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
         simData.DownloadDurationsInMs.push_back(downloadData.TimeInMs);
-        simData.DownloadBitRatesInKbps.push_back(segmentByteCount / videoModel.SegmentDurationInMs);
+        simData.DownloadBitRatesInKbps.push_back(segmentByteCount * CHAR_BIT / videoModel.SegmentDurationInMs);
         if (decision.SegmentID == ctx.NextSegmentID) ++ctx.NextSegmentID;
         return downloadData;
     };
@@ -42,9 +42,10 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
             ++ctx.PlaybackSegmentID, ctx.PlaybackTimeInSegmentInMs = 0;
             ++bufferEndSegmentID;
             networkModel.Delay(delayInMs);
-            simData.FullBufferDelaysInMs.push_back(delayInMs);
+            simData.TotalTimeInMs += delayInMs;
             simData.DownloadDurationsInMs.push_back(delayInMs);
             simData.DownloadBitRatesInKbps.push_back(0);
+            simData.FullBufferDelaysInMs.push_back(delayInMs);
         }
 
         // Downloads a new or existing segment.

@@ -5,6 +5,10 @@
 #include "Core/Core.h"
 
 namespace LLU {
+    inline const std::vector<std::pair<std::string, std::string>> PacletErrors = { // NOLINT(cert-err58-cpp)
+            {"UnknownOptionError", "Unknown option `opt`"}
+    };
+
     template<WS::Encoding EIn, WS::Encoding EOut>
     auto &operator>>(WSStream<EIn, EOut> &stream, size_t &value) {
         long long temp;
@@ -21,8 +25,10 @@ namespace LLU {
     }
 
     template<WS::Encoding EIn, WS::Encoding EOut, typename T>
-    auto &operator<<(WSStream<EIn, EOut> &stream, std::optional<T> opt) {
-        if (opt.has_value()) return stream << opt.value();
+    auto &operator<<(WSStream<EIn, EOut> &stream, std::optional<T> optional) {
+        if (optional.has_value()) return stream << optional.value();
         return stream << WS::Missing();
     }
 }
+
+extern "C" DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);

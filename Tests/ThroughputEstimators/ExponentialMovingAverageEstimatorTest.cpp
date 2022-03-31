@@ -2,7 +2,7 @@
 
 #include "ThroughputEstimators/ExponentialMovingAverageEstimator.h"
 
-TEST(ExponentialMovingAverageEstimatorTest, ConstantThroughput) {
+TEST(ExponentialMovingAverageEstimatorTest, ConstantThroughput) { // NOLINT(cert-err58-cpp)
     ExponentialMovingAverageEstimator estimator;
     estimator.Push({.TimeInMs = 1'000, .ByteCount = 25'000});
     EXPECT_EQ(estimator.EstimateInKbps(), 200);
@@ -12,7 +12,7 @@ TEST(ExponentialMovingAverageEstimatorTest, ConstantThroughput) {
     EXPECT_EQ(estimator.EstimateInKbps(), 200);
 }
 
-TEST(ExponentialMovingAverageEstimatorTest, VariableThroughput) {
+TEST(ExponentialMovingAverageEstimatorTest, VariableThroughput) { // NOLINT(cert-err58-cpp)
     ExponentialMovingAverageEstimator estimator;
     estimator.Push({.TimeInMs = 1'000, .ByteCount = 25'000});
     estimator.Push({.TimeInMs = 1'000, .ByteCount = 0});

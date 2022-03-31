@@ -11,10 +11,10 @@ namespace LLU {
         WS::List rules;
         stream >> rules;
         for (auto i = 0; i < rules.getArgc(); ++i) {
-            std::string key;
-            stream >> WS::Rule >> key;
-            if (key == "SafetyFactor") stream >> opts.SafetyFactor;
-            else std::abort();
+            std::string opt;
+            stream >> WS::Rule >> opt;
+            if (opt == "SafetyFactor") stream >> opts.SafetyFactor;
+            else ErrorManager::throwException("UnknownOptionError", opt);
         }
         return stream;
     }
