@@ -30,7 +30,7 @@ FromDurationsAndValues[durations_QuantityArray, values_QuantityArray] := TimeSer
 ImportVideoModel[videoModelFile_String] := With[
   {videoModel = Import[videoModelFile, "RawJSON"]},
   Return[<|
-    "SegmentDuration" -> Quantity[videoModel["SegmentDurationsInMs"], "Milliseconds"],
+    "SegmentDuration" -> Quantity[videoModel["SegmentDurationInMs"], "Milliseconds"],
     "BitRates" -> QuantityArray[videoModel["BitRatesInKbps"], "Kilobits" / "Seconds"],
     "SegmentSizes" -> QuantityArray[videoModel["SegmentByteCounts"], "Bytes"]
   |>]
@@ -40,7 +40,7 @@ ImportNetworkModel[networkModelFile_String] := With[
   {networkModel = Import[networkModelFile, "RawJSON"]},
   Return[<|
     "Durations" -> QuantityArray[networkModel["DurationsInMs"], "Milliseconds"],
-    "Throughputs" -> QuantityArray[networkModel["ThroughtputsInKbps"], "Kilobits" / "Seconds"]
+    "Throughputs" -> QuantityArray[networkModel["ThroughputsInKbps"], "Kilobits" / "Seconds"]
   |>]
 ];
 
@@ -55,7 +55,7 @@ NetworkTimeSeries[networkModel_Association, length_Quantity] := With[
 Options[ABRSessionSimulate] = {
   "Controller" -> {"ThroughputBasedController", Automatic},
   "ThroughputEstimator" -> {"ExponentialMovingAverageEstimator", Automatic},
-  "SessionOptions" -> Automatic
+  "MaxBufferSegmentCount" -> 5
 };
 ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPattern[]] := Module[
   {videoModel, controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData, totalTime},
@@ -67,8 +67,9 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
   throughputEstimatorType = First@OptionValue["ThroughputEstimator"];
   throughputEstimatorOpts = Rest@OptionValue["ThroughputEstimator"];
   If[throughputEstimatorOpts == {Automatic}, throughputEstimatorOpts = {}];
-  sessionOpts = OptionValue["SessionOptions"];
-  If[sessionOpts == Automatic, sessionOpts = {}];
+  sessionOpts = {
+    "MaxBufferSegmentCount" -> OptionValue["MaxBufferSegmentCount"]
+  };
 
   simData = $ABRSessionSimulate[
     videoModelFile, networkModelFile,
@@ -79,6 +80,7 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
   totalTime = Quantity[simData["TotalTimeInMs"], "Milliseconds"];
   Return[<|
     "TotalTime" -> totalTime,
+    "MaxBufferLevel" -> OptionValue["MaxBufferSegmentCount"] * videoModel["SegmentDuration"],
     "EncodingBitRates" -> videoModel["BitRates"],
     "BufferedBitRates" -> QuantityArray[simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
     "NetworkTimeSeries" -> NetworkTimeSeries[ImportNetworkModel[networkModelFile], totalTime],
@@ -86,13 +88,17 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
       QuantityArray[simData["DownloadDurationsInMs"], "Milliseconds"],
       QuantityArray[simData["DownloadBitRatesInKbps"], "Kilobits" / "Seconds"]
     ],
+    "BufferTimeSeries" -> TimeSeries[
+      QuantityArray[simData["BufferLevelsInMs"], "Milliseconds"],
+      {QuantityMagnitude[QuantityArray[simData["BufferTimesInMs"], "Milliseconds"], "Seconds"]}
+    ],
     "RebufferingDurations" -> QuantityArray[simData["RebufferingDurationsInMs"], "Milliseconds"],
     "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"]
   |>]
 ];
 
 ABRSessionPlot[simData_Association] := Module[
-  {totalSeconds, downloadPlot, bitRateRefLines},
+  {totalSeconds, downloadPlot, bitRateRefLines, bufferPlot, maxBufferRefLine},
 
   totalSeconds = QuantityMagnitude[simData["TotalTime"], "Seconds"];
   downloadPlot = Plot[
@@ -103,11 +109,25 @@ ABRSessionPlot[simData_Association] := Module[
     Evaluate@Style[Normal@simData["EncodingBitRates"], Gray, Dotted], {t, 0, totalSeconds},
     TargetUnits -> "Megabits" / "Seconds", PlotLegends -> {"Encoding Bit Rates"}
   ];
-  Show[
+  downloadPlot = Show[
     downloadPlot, bitRateRefLines,
     PlotRange -> All, AxesLabel -> {"Time (s)", "Bit Rate (Mb/s)"},
-    AspectRatio -> Automatic, ImageSize -> {Automatic, Large}
-  ]
+    AspectRatio -> Full, ImageSize -> {Full, Tiny}
+  ];
+  bufferPlot = ListLinePlot[
+    simData["BufferTimeSeries"],
+    TargetUnits -> "Seconds", PlotLegends -> {"Current Buffer Level"}
+  ];
+  maxBufferRefLine = Plot[
+    Style[simData["MaxBufferLevel"], Gray, Dotted], {t, 0, totalSeconds},
+    TargetUnits -> "Seconds", PlotLegends -> {"Max Buffer Level"}
+  ];
+  bufferPlot = Show[
+    bufferPlot, maxBufferRefLine,
+    PlotRange -> All, AxesLabel -> {"Time (s)", "Buffer Level (s)"},
+    AspectRatio -> Full, ImageSize -> {Full, Tiny}
+  ];
+  Return[Column[{downloadPlot, bufferPlot}, ItemSize -> Full]]
 ];
 
 End[];

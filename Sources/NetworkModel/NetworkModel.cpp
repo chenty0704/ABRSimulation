@@ -5,7 +5,7 @@ NetworkModel NetworkModel::Import(std::string_view fileName) {
     const auto obj = JSON::Import(fileName).as_object();
     NetworkModel networkModel;
     networkModel.durationsInMs = boost::json::value_to<std::vector<size_t>>(obj.at("DurationsInMs"));
-    networkModel.throughputsInKbps = boost::json::value_to<std::vector<size_t>>(obj.at("ThroughtputsInKbps"));
+    networkModel.throughputsInKbps = boost::json::value_to<std::vector<size_t>>(obj.at("ThroughputsInKbps"));
     return networkModel;
 }
 

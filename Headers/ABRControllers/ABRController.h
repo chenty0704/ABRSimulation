@@ -10,6 +10,16 @@ struct SessionContext {
     std::reference_wrapper<const VideoModel> VideoModel;
     std::span<const std::optional<size_t>> BufferedBitRatesInKbps;
     std::reference_wrapper<const ThroughputEstimator> ThroughputEstimator;
+
+    template<typename Range>
+    SessionContext(const struct VideoModel &videoModel, Range &&bufferedBitRatesInKbps,
+                   const class ThroughputEstimator &throughputEstimator)
+            : VideoModel(videoModel), BufferedBitRatesInKbps(bufferedBitRatesInKbps),
+              ThroughputEstimator(throughputEstimator) {}
+
+    [[nodiscard]] size_t BufferLevelInMs() const {
+        return (NextSegmentID - PlaybackSegmentID) * VideoModel.get().SegmentDurationInMs - PlaybackTimeInSegmentInMs;
+    }
 };
 
 struct DownloadDecision {

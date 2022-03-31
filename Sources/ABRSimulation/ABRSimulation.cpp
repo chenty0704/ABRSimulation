@@ -5,13 +5,8 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
                                               ABRController &controller,
                                               ThroughputEstimator &throughputEstimator,
                                               const SessionOptions &opts) {
-    SimulationData simData;
-    simData.BufferedBitRatesInKbps.resize(videoModel.SegmentCount());
-    SessionContext ctx{
-            .VideoModel = videoModel,
-            .BufferedBitRatesInKbps = simData.BufferedBitRatesInKbps,
-            .ThroughputEstimator = throughputEstimator
-    };
+    SimulationData simData(videoModel.SegmentCount());
+    SessionContext ctx(videoModel, simData.BufferedBitRatesInKbps, throughputEstimator);
 
     const auto DownloadSegment = [&](DownloadDecision decision) {
         assert(ctx.PlaybackTimeInSegmentInMs > 0 ? decision.SegmentID > ctx.PlaybackSegmentID
@@ -20,20 +15,27 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         const auto segmentByteCount = videoModel.SegmentByteCounts.at(decision.SegmentID).at(decision.BitRateID);
         const auto downloadData = networkModel.Download(segmentByteCount);
         throughputEstimator.Push(downloadData);
-        simData.TotalTimeInMs += downloadData.TimeInMs;
         simData.DownloadDurationsInMs.push_back(downloadData.TimeInMs);
         simData.DownloadBitRatesInKbps.push_back(segmentByteCount * CHAR_BIT / videoModel.SegmentDurationInMs);
-        if (decision.SegmentID == ctx.NextSegmentID) ++ctx.NextSegmentID;
         return downloadData;
+    };
+    const auto UpdateBuffer = [&](DownloadDecision decision) {
+        simData.BufferTimesInMs.push_back(simData.TotalTimeInMs);
+        simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());
+        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
+        if (decision.SegmentID == ctx.NextSegmentID) ++ctx.NextSegmentID;
+        simData.BufferTimesInMs.push_back(simData.TotalTimeInMs + 1);
+        simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());
     };
 
     // Downloads the first segment at the lowest bit rate.
     DownloadDecision decision{ctx.NextSegmentID, 0};
-    DownloadSegment(decision);
-    simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
+    auto downloadData = DownloadSegment(decision);
+    simData.TotalTimeInMs += downloadData.TimeInMs;
+    UpdateBuffer(decision);
 
     // Downloads the rest of the segments.
-    while (!simData.BufferedBitRatesInKbps.back().has_value()) {
+    while (ctx.NextSegmentID < videoModel.SegmentCount()) {
         auto bufferEndSegmentID =
                 std::min(ctx.PlaybackSegmentID + opts.MaxBufferSegmentCount, videoModel.SegmentCount());
 
@@ -46,17 +48,18 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
             simData.TotalTimeInMs += delayInMs;
             simData.DownloadDurationsInMs.push_back(delayInMs);
             simData.DownloadBitRatesInKbps.push_back(0);
+            simData.BufferTimesInMs.push_back(simData.TotalTimeInMs);
+            simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());
             simData.FullBufferDelaysInMs.push_back(delayInMs);
         }
 
         // Downloads a new or existing segment.
         decision = controller.GetDownloadDecision(ctx);
-        const auto downloadData = DownloadSegment(decision);
+        downloadData = DownloadSegment(decision);
 
         // Plays the buffer content while downloading.
         size_t playbackTimeInMs = 0;
-        while (playbackTimeInMs < downloadData.TimeInMs &&
-               simData.BufferedBitRatesInKbps.at(ctx.PlaybackSegmentID).has_value()) {
+        while (playbackTimeInMs < downloadData.TimeInMs && ctx.PlaybackSegmentID < ctx.NextSegmentID) {
             const auto restTimeInSegmentInMs = videoModel.SegmentDurationInMs - ctx.PlaybackTimeInSegmentInMs;
             if (downloadData.TimeInMs - playbackTimeInMs < restTimeInSegmentInMs) {
                 ctx.PlaybackTimeInSegmentInMs += downloadData.TimeInMs - playbackTimeInMs;
@@ -66,21 +69,27 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
                 playbackTimeInMs += restTimeInSegmentInMs;
             }
         }
-        if (playbackTimeInMs < downloadData.TimeInMs)
-            simData.RebufferingDurationsInMs.push_back(downloadData.TimeInMs - playbackTimeInMs);
+        simData.TotalTimeInMs += playbackTimeInMs;
 
-        // Places the downloaded segment in the buffer.
-        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
+        // Triggers rebuffering if there is not enough buffer content.
+        if (playbackTimeInMs < downloadData.TimeInMs) {
+            const auto rebufferingDurationInMs = downloadData.TimeInMs - playbackTimeInMs;
+            simData.BufferTimesInMs.push_back(simData.TotalTimeInMs);
+            simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());
+            simData.RebufferingDurationsInMs.push_back(rebufferingDurationInMs);
+            simData.TotalTimeInMs += rebufferingDurationInMs;
+        }
+
+        UpdateBuffer(decision);
     }
 
     // Plays the rest of the buffer content.
-    if (ctx.PlaybackSegmentID < videoModel.SegmentCount()) {
-        const auto restPlaybackTimeInMs = (videoModel.SegmentCount() - ctx.PlaybackSegmentID)
-                                          * videoModel.SegmentDurationInMs - ctx.PlaybackTimeInSegmentInMs;
-        simData.TotalTimeInMs += restPlaybackTimeInMs;
-        simData.DownloadDurationsInMs.push_back(restPlaybackTimeInMs);
-        simData.DownloadBitRatesInKbps.push_back(0);
-    }
+    const auto bufferLevelInMs = ctx.BufferLevelInMs();
+    simData.TotalTimeInMs += bufferLevelInMs;
+    simData.DownloadDurationsInMs.push_back(bufferLevelInMs);
+    simData.DownloadBitRatesInKbps.push_back(0);
+    simData.BufferTimesInMs.push_back(simData.TotalTimeInMs);
+    simData.BufferLevelsInMs.push_back(0);
 
     return simData;
 }
