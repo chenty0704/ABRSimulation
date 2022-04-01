@@ -6,18 +6,10 @@
 #include "Interface/CoreInterface.h"
 
 namespace LLU {
-    template<WS::Encoding EIn, WS::Encoding EOut>
-    auto &operator>>(WSStream<EIn, EOut> &stream, ThroughputBasedControllerOptions &opts) {
-        WS::List rules;
-        stream >> rules;
-        for (auto i = 0; i < rules.getArgc(); ++i) {
-            std::string opt;
-            stream >> WS::Rule >> opt;
-            if (opt == "SafetyFactor") stream >> opts.SafetyFactor;
-            else ErrorManager::throwException("UnknownOptionError", opt);
-        }
-        return stream;
-    }
+    LLU_REGISTER_INPUT_TYPE(
+            ThroughputBasedControllerOptions,
+            SafetyFactor
+    )
 
     template<WS::Encoding EIn, WS::Encoding EOut>
     auto &operator>>(WSStream<EIn, EOut> &stream, std::unique_ptr<ABRController> &controller) {

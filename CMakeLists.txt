@@ -9,6 +9,9 @@ set(LLU_ROOT "$ENV{ProgramFiles}/Wolfram Research/LibraryLinkUtilities/${CMAKE_B
         CACHE PATH "Path to LLU installation.")
 find_package(LLU REQUIRED CONFIG PATH_SUFFIXES LLU)
 
+find_package(Boost REQUIRED COMPONENTS json)
+include_directories(${Boost_INCLUDE_DIRS})
+
 include_directories(Headers)
 
 add_subdirectory(Sources)

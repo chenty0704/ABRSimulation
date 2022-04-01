@@ -1,5 +1,3 @@
-find_package(Boost REQUIRED COMPONENTS json)
-
 add_library(JSON
         Core/JSON.cpp)
 target_link_libraries(JSON PUBLIC

@@ -9,7 +9,7 @@ int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
         std::string videoModelFile, networkModelFile;
         std::unique_ptr<ABRController> controller;
         std::unique_ptr<ThroughputEstimator> throughputEstimator;
-        SessionOptions opts;
+        SessionOptions opts; // NOLINT(cppcoreguidelines-pro-type-member-init)
 
         stream >> LLU::WS::List(7) >> videoModelFile >> networkModelFile >> controller >> throughputEstimator >> opts;
         const auto videoModel = VideoModel::Import(videoModelFile);
