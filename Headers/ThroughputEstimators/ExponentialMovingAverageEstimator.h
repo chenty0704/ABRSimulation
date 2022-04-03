@@ -3,8 +3,8 @@
 #include "ThroughputEstimators/ThroughputEstimator.h"
 
 struct ExponentialMovingAverageEstimatorOptions : ThroughputEstimatorOptions {
-    size_t SlowHalfLifeInMs = 8'000;
-    size_t FastHalfLifeInMs = 3'000;
+    double SlowHalfLifeInMs = 8'000;
+    double FastHalfLifeInMs = 3'000;
 };
 
 class ExponentialMovingAverageEstimator : public ThroughputEstimator {
@@ -14,7 +14,7 @@ public:
 
     void Push(DownloadData data) override;
 
-    [[nodiscard]] size_t EstimateInKbps() const override;
+    [[nodiscard]] double EstimateInKbps() const override;
 
 private:
     double slowEstimateInKbps = 0, fastEstimateInKbps = 0;

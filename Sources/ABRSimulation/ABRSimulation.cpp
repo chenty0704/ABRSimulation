@@ -16,7 +16,8 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         const auto downloadData = networkModel.Download(segmentByteCount);
         throughputEstimator.Push(downloadData);
         simData.DownloadDurationsInMs.push_back(downloadData.TimeInMs);
-        simData.DownloadBitRatesInKbps.push_back(segmentByteCount * CHAR_BIT / videoModel.SegmentDurationInMs);
+        simData.DownloadBitRatesInKbps.push_back(
+                static_cast<double>(segmentByteCount * CHAR_BIT) / videoModel.SegmentDurationInMs);
         return downloadData;
     };
     const auto UpdateBuffer = [&](DownloadDecision decision) {
@@ -58,25 +59,26 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         downloadData = DownloadSegment(decision);
 
         // Plays the buffer content while downloading.
-        size_t playbackTimeInMs = 0;
-        while (playbackTimeInMs < downloadData.TimeInMs && ctx.PlaybackSegmentID < ctx.NextSegmentID) {
+        double elapsedTimeInMs = 0;
+        while (elapsedTimeInMs < downloadData.TimeInMs && ctx.PlaybackSegmentID < ctx.NextSegmentID) {
             const auto restTimeInSegmentInMs = videoModel.SegmentDurationInMs - ctx.PlaybackTimeInSegmentInMs;
-            if (downloadData.TimeInMs - playbackTimeInMs < restTimeInSegmentInMs) {
-                ctx.PlaybackTimeInSegmentInMs += downloadData.TimeInMs - playbackTimeInMs;
-                playbackTimeInMs = downloadData.TimeInMs;
+            if (downloadData.TimeInMs - elapsedTimeInMs < restTimeInSegmentInMs) {
+                ctx.PlaybackTimeInSegmentInMs += downloadData.TimeInMs - elapsedTimeInMs;
+                elapsedTimeInMs = downloadData.TimeInMs;
             } else {
                 ++ctx.PlaybackSegmentID, ctx.PlaybackTimeInSegmentInMs = 0;
-                playbackTimeInMs += restTimeInSegmentInMs;
+                elapsedTimeInMs += restTimeInSegmentInMs;
             }
         }
-        simData.TotalTimeInMs += playbackTimeInMs;
+        simData.TotalTimeInMs += elapsedTimeInMs;
 
         // Triggers rebuffering if there is not enough buffer content.
-        if (playbackTimeInMs < downloadData.TimeInMs) {
-            const auto rebufferingDurationInMs = downloadData.TimeInMs - playbackTimeInMs;
+        if (elapsedTimeInMs < downloadData.TimeInMs) {
+            const auto rebufferingDurationInMs = downloadData.TimeInMs - elapsedTimeInMs;
             simData.BufferTimesInMs.push_back(simData.TotalTimeInMs);
             simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());
-            simData.RebufferingDurationsInMs.push_back(rebufferingDurationInMs);
+            simData.RebufferingPeriodsInMs.emplace_back(simData.TotalTimeInMs,
+                                                        simData.TotalTimeInMs + rebufferingDurationInMs);
             simData.TotalTimeInMs += rebufferingDurationInMs;
         }
 

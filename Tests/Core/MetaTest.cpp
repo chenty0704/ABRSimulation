@@ -7,11 +7,6 @@ TEST(MetaTest, ForEachRef) { // NOLINT(cert-err58-cpp)
     ForEachRef([](auto &x) { ++x; }, a, b);
     EXPECT_EQ(a, 2);
     EXPECT_EQ(b, 3);
-
-    const auto c = 1, d = 2;
-    auto sum = 0;
-    ForEachRef([&](const auto &x) { sum += x; }, c, d);
-    EXPECT_EQ(sum, 3);
 }
 
 TEST(MetaTest, ForEachRefUntil) { // NOLINT(cert-err58-cpp)

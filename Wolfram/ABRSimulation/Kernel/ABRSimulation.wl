@@ -30,8 +30,8 @@ FromDurationsAndValues[durations_QuantityArray, values_QuantityArray] := TimeSer
 ImportVideoModel[videoModelFile_String] := With[
   {videoModel = Import[videoModelFile, "RawJSON"]},
   Return[<|
-    "SegmentDuration" -> Quantity[videoModel["SegmentDurationInMs"], "Milliseconds"],
-    "BitRates" -> QuantityArray[videoModel["BitRatesInKbps"], "Kilobits" / "Seconds"],
+    "SegmentDuration" -> Quantity[N@videoModel["SegmentDurationInMs"], "Milliseconds"],
+    "BitRates" -> QuantityArray[N@videoModel["BitRatesInKbps"], "Kilobits" / "Seconds"],
     "SegmentSizes" -> QuantityArray[videoModel["SegmentByteCounts"], "Bytes"]
   |>]
 ];
@@ -39,8 +39,8 @@ ImportVideoModel[videoModelFile_String] := With[
 ImportNetworkModel[networkModelFile_String] := With[
   {networkModel = Import[networkModelFile, "RawJSON"]},
   Return[<|
-    "Durations" -> QuantityArray[networkModel["DurationsInMs"], "Milliseconds"],
-    "Throughputs" -> QuantityArray[networkModel["ThroughputsInKbps"], "Kilobits" / "Seconds"]
+    "Durations" -> QuantityArray[N@networkModel["DurationsInMs"], "Milliseconds"],
+    "Throughputs" -> QuantityArray[N@networkModel["ThroughputsInKbps"], "Kilobits" / "Seconds"]
   |>]
 ];
 
@@ -78,7 +78,7 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
     sessionOpts
   ];
   totalTime = Quantity[simData["TotalTimeInMs"], "Milliseconds"];
-  Return[<|
+  Return[Dataset[<|
     "TotalTime" -> totalTime,
     "MaxBufferLevel" -> OptionValue["MaxBufferSegmentCount"] * videoModel["SegmentDuration"],
     "EncodingBitRates" -> videoModel["BitRates"],
@@ -92,13 +92,13 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
       QuantityArray[simData["BufferLevelsInMs"], "Milliseconds"],
       {QuantityMagnitude[QuantityArray[simData["BufferTimesInMs"], "Milliseconds"], "Seconds"]}
     ],
-    "RebufferingDurations" -> QuantityArray[simData["RebufferingDurationsInMs"], "Milliseconds"],
+    "RebufferingPeriods" -> QuantityArray[simData["RebufferingPeriodsInMs"], "Milliseconds"],
     "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"]
-  |>]
+  |>]]
 ];
 
-ABRSessionPlot[simData_Association] := Module[
-  {totalSeconds, downloadPlot, bitRateRefLines, bufferPlot, maxBufferRefLine},
+ABRSessionPlot[simData_Dataset] := Module[
+  {totalSeconds, downloadPlot, bitRateRefLines, rebufferingLines, bufferPlot, maxBufferRefLine},
 
   totalSeconds = QuantityMagnitude[simData["TotalTime"], "Seconds"];
   downloadPlot = Plot[
@@ -114,8 +114,11 @@ ABRSessionPlot[simData_Association] := Module[
     PlotRange -> All, AxesLabel -> {"Time (s)", "Bit Rate (Mb/s)"},
     AspectRatio -> Full, ImageSize -> {Full, Tiny}
   ];
+  rebufferingLines = If[Length@simData["RebufferingPeriods"] == 0, {},
+    Style[Line /@ Map[{#, 0} &, QuantityMagnitude[simData["RebufferingPeriods"], "Seconds"], {2}], Red]
+  ];
   bufferPlot = ListLinePlot[
-    simData["BufferTimeSeries"],
+    simData["BufferTimeSeries"], Epilog -> rebufferingLines,
     TargetUnits -> "Seconds", PlotLegends -> {"Current Buffer Level"}
   ];
   maxBufferRefLine = Plot[

@@ -6,9 +6,10 @@
 
 struct SessionContext {
     size_t NextSegmentID = 0;
-    size_t PlaybackSegmentID = 0, PlaybackTimeInSegmentInMs = 0;
+    size_t PlaybackSegmentID = 0;
+    double PlaybackTimeInSegmentInMs = 0;
     std::reference_wrapper<const VideoModel> VideoModel;
-    std::span<const std::optional<size_t>> BufferedBitRatesInKbps;
+    std::span<const std::optional<double>> BufferedBitRatesInKbps;
     std::reference_wrapper<const ThroughputEstimator> ThroughputEstimator;
 
     template<typename Range>
@@ -17,8 +18,9 @@ struct SessionContext {
             : VideoModel(videoModel), BufferedBitRatesInKbps(bufferedBitRatesInKbps),
               ThroughputEstimator(throughputEstimator) {}
 
-    [[nodiscard]] size_t BufferLevelInMs() const {
-        return (NextSegmentID - PlaybackSegmentID) * VideoModel.get().SegmentDurationInMs - PlaybackTimeInSegmentInMs;
+    [[nodiscard]] double BufferLevelInMs() const {
+        return static_cast<double>(NextSegmentID - PlaybackSegmentID) *
+               VideoModel.get().SegmentDurationInMs - PlaybackTimeInSegmentInMs;
     }
 };
 

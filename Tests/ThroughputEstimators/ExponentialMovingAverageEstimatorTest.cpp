@@ -5,11 +5,11 @@
 TEST(ExponentialMovingAverageEstimatorTest, ConstantThroughput) { // NOLINT(cert-err58-cpp)
     ExponentialMovingAverageEstimator estimator;
     estimator.Push({.TimeInMs = 1'000, .ByteCount = 25'000});
-    EXPECT_EQ(estimator.EstimateInKbps(), 200);
+    EXPECT_DOUBLE_EQ(estimator.EstimateInKbps(), 200);
     estimator.Push({.TimeInMs = 1'500, .ByteCount = 37'500});
-    EXPECT_EQ(estimator.EstimateInKbps(), 200);
+    EXPECT_DOUBLE_EQ(estimator.EstimateInKbps(), 200);
     estimator.Push({.TimeInMs = 2'500, .ByteCount = 62'500});
-    EXPECT_EQ(estimator.EstimateInKbps(), 200);
+    EXPECT_DOUBLE_EQ(estimator.EstimateInKbps(), 200);
 }
 
 TEST(ExponentialMovingAverageEstimatorTest, VariableThroughput) { // NOLINT(cert-err58-cpp)

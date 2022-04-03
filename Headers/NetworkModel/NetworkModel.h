@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 
 struct DownloadData {
-    size_t TimeInMs;
+    double TimeInMs;
     size_t ByteCount;
 };
 
@@ -13,9 +13,10 @@ public:
 
     DownloadData Download(size_t byteCount);
 
-    void Delay(size_t timeInMs);
+    void Delay(double timeInMs);
 
 private:
-    size_t period = 0, timeInPeriodInMs = 0;
-    std::vector<size_t> durationsInMs, throughputsInKbps;
+    size_t period = 0;
+    double timeInPeriodInMs = 0;
+    std::vector<double> durationsInMs, throughputsInKbps;
 };

@@ -13,12 +13,12 @@ public:
 
     virtual void Push(DownloadData data);
 
-    [[nodiscard]] virtual size_t EstimateInKbps() const = 0;
+    [[nodiscard]] virtual double EstimateInKbps() const = 0;
 
     virtual ~ThroughputEstimator() = default;
 
 protected:
     std::unique_ptr<ThroughputEstimatorOptions> opts;
-    size_t timeInMs = 0;
-    std::vector<size_t> durationsInMs, throughputsInKbps;
+    double timeInMs = 0;
+    std::vector<double> durationsInMs, throughputsInKbps;
 };

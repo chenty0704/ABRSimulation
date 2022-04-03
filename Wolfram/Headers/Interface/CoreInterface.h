@@ -78,12 +78,17 @@ namespace LLU {
         return stream << WS::Missing();
     }
 
+    template<WS::Encoding EIn, WS::Encoding EOut, typename T1, typename T2>
+    auto &operator<<(WSStream<EIn, EOut> &stream, const std::pair<T1, T2> &pair) {
+        return stream << WS::List(2) << pair.first << pair.second;
+    }
+
     template<WS::Encoding EIn, WS::Encoding EOut, typename... Args>
     void WriteObject(WSStream<EIn, EOut> &stream,
                      const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                      const Args &... fields) {
         stream << WS::Association(sizeof...(Args));
-        ForEachRefIndexed([&](size_t i, const auto &field) {
+        ForEachCRefIndexed([&](size_t i, const auto &field) {
             stream << WS::Rule << fieldNames[i] << field;
         }, fields...);
     }

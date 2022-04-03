@@ -19,7 +19,7 @@ namespace LLU {
             BufferedBitRatesInKbps,
             DownloadDurationsInMs, DownloadBitRatesInKbps,
             BufferTimesInMs, BufferLevelsInMs,
-            RebufferingDurationsInMs,
+            RebufferingPeriodsInMs,
             FullBufferDelaysInMs
     )
 }
