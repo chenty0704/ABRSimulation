@@ -1,15 +1,15 @@
 #pragma once
 
-#include "ABRControllers/ABRController.h"
+#include "ABRControllers/IABRController.h"
 
-struct ThroughputBasedControllerOptions : ABRControllerOptions {
+struct ThroughputBasedControllerOptions : IABRControllerOptions {
     double SafetyFactor = 0.9;
 };
 
-class ThroughputBasedController : public ABRController {
+class ThroughputBasedController : public IABRController {
 public:
     explicit ThroughputBasedController(const ThroughputBasedControllerOptions &opts = {})
-            : ABRController(std::make_unique<ThroughputBasedControllerOptions>(opts)) {}
+            : IABRController(std::make_unique<ThroughputBasedControllerOptions>(opts)) {}
 
     DownloadDecision GetDownloadDecision(const SessionContext &ctx) override;
 };

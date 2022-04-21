@@ -2,11 +2,14 @@
 
 SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
                                               NetworkModel &networkModel,
-                                              ABRController &controller,
-                                              ThroughputEstimator &throughputEstimator,
+                                              IABRController &controller,
+                                              IThroughputEstimator &throughputEstimator,
                                               const SessionOptions &opts) {
-    SimulationData simData(videoModel.SegmentCount());
-    SessionContext ctx(videoModel, simData.BufferedBitRatesInKbps, throughputEstimator);
+    SimulationData simData{
+            .MaxBufferLevelInMs = static_cast<double>(opts.MaxBufferSegmentCount) * videoModel.SegmentDurationInMs,
+    };
+    simData.BufferedBitRatesInKbps.resize(videoModel.SegmentCount());
+    SessionContext ctx(opts.MaxBufferSegmentCount, videoModel, simData.BufferedBitRatesInKbps, throughputEstimator);
 
     const auto DownloadSegment = [&](DownloadDecision decision) {
         assert(ctx.PlaybackTimeInSegmentInMs > 0 ? decision.SegmentID > ctx.PlaybackSegmentID

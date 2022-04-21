@@ -3,7 +3,7 @@
 // Includes string-related headers.
 #include <string>
 #include <string_view>
-#include <format>
+#include <fmt/format.h>
 
 // Includes I/O-related headers.
 #include <iostream>
@@ -55,3 +55,4 @@
 #include <version>
 
 using namespace std::literals;
+using namespace fmt::literals;

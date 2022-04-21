@@ -11,15 +11,28 @@ namespace LLU {
             SafetyFactor
     )
 
+    LLU_REGISTER_INPUT_TYPE(
+            ModelPredictiveControllerOptions,
+            TimeIntervalInMs,
+            WindowSize,
+            TargetBufferRatio,
+            BufferDeviationPenaltyFactor,
+            SwitchingCostFactor
+    )
+
     template<WS::Encoding EIn, WS::Encoding EOut>
-    auto &operator>>(WSStream<EIn, EOut> &stream, std::unique_ptr<ABRController> &controller) {
+    auto &operator>>(WSStream<EIn, EOut> &stream, std::unique_ptr<IABRController> &controller) {
         std::string type;
         stream >> type;
         if (type == "ThroughputBasedController") {
             ThroughputBasedControllerOptions opts;
             stream >> opts;
             controller = std::make_unique<ThroughputBasedController>(opts);
-        } else std::abort();
+        } else if (type == "ModelPredictiveController") {
+            ModelPredictiveControllerOptions opts;
+            stream >> opts;
+            controller = std::make_unique<ModelPredictiveController>(stream, opts);
+        } else ErrorManager::throwException("UnknownNameError", type);
         return stream;
     }
 }

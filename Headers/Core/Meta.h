@@ -2,58 +2,58 @@
 
 #include "Core/Core.h"
 
-template<typename Function, typename... Args>
-constexpr void ForEachRef(Function &&f, Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachRef(Fun &&f, Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(std::get<Ints>(tuple)), ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachRefUntil(Function &&f, Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachRefUntil(Fun &&f, Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(std::get<Ints>(tuple)) || ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachRefIndexed(Function &&f, Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachRefIndexed(Fun &&f, Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(Ints, std::get<Ints>(tuple)), ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachRefIndexedUntil(Function &&f, Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachRefIndexedUntil(Fun &&f, Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(Ints, std::get<Ints>(tuple)) || ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachCRef(Function &&f, const Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachCRef(Fun &&f, const Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(std::get<Ints>(tuple)), ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachCRefUntil(Function &&f, const Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachCRefUntil(Fun &&f, const Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(std::get<Ints>(tuple)) || ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachCRefIndexed(Function &&f, const Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachCRefIndexed(Fun &&f, const Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(Ints, std::get<Ints>(tuple)), ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }
 
-template<typename Function, typename... Args>
-constexpr void ForEachCRefIndexedUntil(Function &&f, const Args &...args) {
-    []<std::size_t... Ints>(Function &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
+template<typename Fun, typename... Args>
+constexpr void ForEachCRefIndexedUntil(Fun &&f, const Args &...args) {
+    []<std::size_t... Ints>(Fun &&f, std::tuple<const Args &...> &&tuple, std::index_sequence<Ints...>) {
         (f(Ints, std::get<Ints>(tuple)) || ...);
-    }(std::forward<Function>(f), std::tie(args...), std::index_sequence_for<Args...>());
+    }(std::forward<Fun>(f), std::tie(args...), std::index_sequence_for<Args...>());
 }

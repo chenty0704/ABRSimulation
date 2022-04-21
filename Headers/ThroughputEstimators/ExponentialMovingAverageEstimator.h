@@ -1,16 +1,16 @@
 #pragma once
 
-#include "ThroughputEstimators/ThroughputEstimator.h"
+#include "ThroughputEstimators/IThroughputEstimator.h"
 
-struct ExponentialMovingAverageEstimatorOptions : ThroughputEstimatorOptions {
+struct ExponentialMovingAverageEstimatorOptions : IThroughputEstimatorOptions {
     double SlowHalfLifeInMs = 8'000;
     double FastHalfLifeInMs = 3'000;
 };
 
-class ExponentialMovingAverageEstimator : public ThroughputEstimator {
+class ExponentialMovingAverageEstimator : public IThroughputEstimator {
 public:
     explicit ExponentialMovingAverageEstimator(const ExponentialMovingAverageEstimatorOptions &opts = {})
-            : ThroughputEstimator(std::make_unique<ExponentialMovingAverageEstimatorOptions>(opts)) {}
+            : IThroughputEstimator(std::make_unique<ExponentialMovingAverageEstimatorOptions>(opts)) {}
 
     void Push(DownloadData data) override;
 

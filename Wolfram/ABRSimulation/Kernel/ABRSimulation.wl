@@ -14,8 +14,12 @@ ABRSessionPlot::usage = "ABRSessionPlot[simData] plots the download activities o
 Begin["`Private`"];
 
 $PacletDirectory = FileNameDrop[$InputFileName, -2];
+AppendTo[$Path, FileNameJoin[{$PacletDirectory, "Kernel"}]];
+AppendTo[$Path, FileNameJoin[{$PacletDirectory, "LibraryResources"}]];
 AppendTo[$LibraryPath, FileNameJoin[{$PacletDirectory, "LibraryResources", $SystemID}]];
-Get[FileNameJoin[{$PacletDirectory, "LibraryResources", "LibraryLinkUtilities.wl"}]];
+
+Get["LibraryLinkUtilities`"];
+
 `LLU`InitializePacletLibrary["ABRSimulationInterface"];
 `LLU`LazyWSTPFunctionSet @@@ {
   {$ABRSessionSimulate, "ABRSessionSimulate"}
@@ -29,33 +33,33 @@ FromDurationsAndValues[durations_QuantityArray, values_QuantityArray] := TimeSer
 
 ImportVideoModel[videoModelFile_String] := With[
   {videoModel = Import[videoModelFile, "RawJSON"]},
-  Return[<|
+  Return@<|
     "SegmentDuration" -> Quantity[N@videoModel["SegmentDurationInMs"], "Milliseconds"],
     "BitRates" -> QuantityArray[N@videoModel["BitRatesInKbps"], "Kilobits" / "Seconds"],
     "SegmentSizes" -> QuantityArray[videoModel["SegmentByteCounts"], "Bytes"]
-  |>]
+  |>
 ];
 
 ImportNetworkModel[networkModelFile_String] := With[
   {networkModel = Import[networkModelFile, "RawJSON"]},
-  Return[<|
+  Return@<|
     "Durations" -> QuantityArray[N@networkModel["DurationsInMs"], "Milliseconds"],
     "Throughputs" -> QuantityArray[N@networkModel["ThroughputsInKbps"], "Kilobits" / "Seconds"]
-  |>]
+  |>
 ];
 
 NetworkTimeSeries[networkModel_Association, length_Quantity] := With[
-  {copyCount = Ceiling[length / Total[networkModel["Durations"]]]},
-  Return[FromDurationsAndValues[
+  {copyCount = Ceiling[length / Total@networkModel["Durations"]]},
+  Return@FromDurationsAndValues[
     Join @@ Table[networkModel["Durations"], copyCount],
     Join @@ Table[networkModel["Throughputs"], copyCount]
-  ]]
+  ]
 ];
 
 Options[ABRSessionSimulate] = {
-  "Controller" -> {"ThroughputBasedController", Automatic},
+  "Controller" -> {"ModelPredictiveController", Automatic},
   "ThroughputEstimator" -> {"ExponentialMovingAverageEstimator", Automatic},
-  "MaxBufferSegmentCount" -> 5
+  "SessionOptions" -> Automatic
 };
 ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPattern[]] := Module[
   {videoModel, controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData, totalTime},
@@ -67,9 +71,8 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
   throughputEstimatorType = First@OptionValue["ThroughputEstimator"];
   throughputEstimatorOpts = Rest@OptionValue["ThroughputEstimator"];
   If[throughputEstimatorOpts == {Automatic}, throughputEstimatorOpts = {}];
-  sessionOpts = {
-    "MaxBufferSegmentCount" -> OptionValue["MaxBufferSegmentCount"]
-  };
+  sessionOpts = OptionValue["SessionOptions"];
+  If[sessionOpts == Automatic, sessionOpts = {}];
 
   simData = $ABRSessionSimulate[
     videoModelFile, networkModelFile,
@@ -78,9 +81,9 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
     sessionOpts
   ];
   totalTime = Quantity[simData["TotalTimeInMs"], "Milliseconds"];
-  Return[Dataset[<|
+  Return@Dataset@<|
     "TotalTime" -> totalTime,
-    "MaxBufferLevel" -> OptionValue["MaxBufferSegmentCount"] * videoModel["SegmentDuration"],
+    "MaxBufferLevel" -> Quantity[simData["MaxBufferLevelInMs"], "Milliseconds"],
     "EncodingBitRates" -> videoModel["BitRates"],
     "BufferedBitRates" -> QuantityArray[simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
     "NetworkTimeSeries" -> NetworkTimeSeries[ImportNetworkModel[networkModelFile], totalTime],
@@ -94,7 +97,7 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
     ],
     "RebufferingPeriods" -> QuantityArray[simData["RebufferingPeriodsInMs"], "Milliseconds"],
     "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"]
-  |>]]
+  |>
 ];
 
 ABRSessionPlot[simData_Dataset] := Module[
@@ -130,7 +133,7 @@ ABRSessionPlot[simData_Dataset] := Module[
     PlotRange -> All, AxesLabel -> {"Time (s)", "Buffer Level (s)"},
     AspectRatio -> Full, ImageSize -> {Full, Tiny}
   ];
-  Return[Column[{downloadPlot, bufferPlot}, ItemSize -> Full]]
+  Return@Column[{downloadPlot, bufferPlot}, ItemSize -> Full]
 ];
 
 End[];

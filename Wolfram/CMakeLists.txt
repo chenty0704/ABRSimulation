@@ -3,8 +3,6 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
             CACHE PATH "Install path prefix, prepended onto install directories." FORCE)
 endif ()
 
-include_directories(Headers)
-
 add_subdirectory(Sources)
 
 install_paclet_files(TARGET ABRSimulationInterface

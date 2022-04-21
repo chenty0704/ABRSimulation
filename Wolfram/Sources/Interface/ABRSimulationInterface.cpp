@@ -2,13 +2,13 @@
 #include "NetworkModel/NetworkModel.h"
 #include "Interface/ABRSimulationInterface.h"
 
-int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
+int ABRSessionSimulate(WolframLibraryData libData, WSLINK wslink) {
     try {
         LLU::WSStream<LLU::WS::Encoding::Native> stream(wslink);
 
         std::string videoModelFile, networkModelFile;
-        std::unique_ptr<ABRController> controller;
-        std::unique_ptr<ThroughputEstimator> throughputEstimator;
+        std::unique_ptr<IABRController> controller;
+        std::unique_ptr<IThroughputEstimator> throughputEstimator;
         SessionOptions opts;
 
         stream >> LLU::WS::List(7) >> videoModelFile >> networkModelFile >> controller >> throughputEstimator >> opts;

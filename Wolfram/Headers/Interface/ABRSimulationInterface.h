@@ -16,6 +16,7 @@ namespace LLU {
     LLU_REGISTER_OUTPUT_TYPE(
             SimulationData,
             TotalTimeInMs,
+            MaxBufferLevelInMs,
             BufferedBitRatesInKbps,
             DownloadDurationsInMs, DownloadBitRatesInKbps,
             BufferTimesInMs, BufferLevelsInMs,
