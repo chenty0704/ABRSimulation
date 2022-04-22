@@ -6,10 +6,10 @@ ImportVideoModel::usage = "ImportVideoModel[videoModelFile] imports a video mode
 
 ImportNetworkModel::usage = "ImportNetworkModel[networkModelFile] imports a network model from a file";
 
-ABRSessionSimulate::usage = "ABRSessionSimulate[videoModelFile, networkModelFile, opts] simulates an ABR session \
-using the specified options.";
+ABRSessionSimulate::usage = "ABRSessionSimulate[videoModel, networkModel, opts] simulates an ABR session for a video \
+under the specified network model.";
 
-ABRSessionPlot::usage = "ABRSessionPlot[simData] plots the download activities of an ABR session.";
+ABRSessionPlot::usage = "ABRSessionPlot[simData] visualizes the download activities of an ABR session.";
 
 Begin["`Private`"];
 
@@ -61,10 +61,9 @@ Options[ABRSessionSimulate] = {
   "ThroughputEstimator" -> {"ExponentialMovingAverageEstimator", Automatic},
   "SessionOptions" -> Automatic
 };
-ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPattern[]] := Module[
-  {videoModel, controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData, totalTime},
+ABRSessionSimulate[videoModel_Association, networkModel_Association, OptionsPattern[]] := Module[
+  {controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData, totalTime},
 
-  videoModel = ImportVideoModel[videoModelFile];
   controllerType = First@OptionValue["Controller"];
   controllerOpts = Rest@OptionValue["Controller"];
   If[controllerOpts == {Automatic}, controllerOpts = {}];
@@ -75,7 +74,15 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
   If[sessionOpts == Automatic, sessionOpts = {}];
 
   simData = $ABRSessionSimulate[
-    videoModelFile, networkModelFile,
+    <|
+      "SegmentDurationInMs" -> QuantityMagnitude[videoModel["SegmentDuration"], "Milliseconds"],
+      "BitRatesInKbps" -> QuantityMagnitude[videoModel["BitRates"], "Kilobits" / "Seconds"],
+      "SegmentByteCounts" -> QuantityMagnitude[videoModel["SegmentSizes"], "Bytes"]
+    |>,
+    <|
+      "DurationsInMs" -> QuantityMagnitude[networkModel["Durations"], "Milliseconds"],
+      "ThroughputsInKbps" -> QuantityMagnitude[networkModel["Throughputs"], "Kilobits" / "Seconds"]
+    |>,
     controllerType, controllerOpts,
     throughputEstimatorType, throughputEstimatorOpts,
     sessionOpts
@@ -86,7 +93,7 @@ ABRSessionSimulate[videoModelFile_String, networkModelFile_String, OptionsPatter
     "MaxBufferLevel" -> Quantity[simData["MaxBufferLevelInMs"], "Milliseconds"],
     "EncodingBitRates" -> videoModel["BitRates"],
     "BufferedBitRates" -> QuantityArray[simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
-    "NetworkTimeSeries" -> NetworkTimeSeries[ImportNetworkModel[networkModelFile], totalTime],
+    "NetworkTimeSeries" -> NetworkTimeSeries[networkModel, totalTime],
     "DownloadTimeSeries" -> FromDurationsAndValues[
       QuantityArray[simData["DownloadDurationsInMs"], "Milliseconds"],
       QuantityArray[simData["DownloadBitRatesInKbps"], "Kilobits" / "Seconds"]

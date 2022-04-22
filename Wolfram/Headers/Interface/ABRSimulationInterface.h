@@ -2,8 +2,6 @@
 
 #include "ABRSimulation/ABRSimulation.h"
 #include "Interface/CoreInterface.h"
-#include "Interface/ThroughputEstimatorsInterface.h"
-#include "Interface/ABRControllersInterface.h"
 
 namespace LLU {
     LLU_REGISTER_INPUT_TYPE(SessionOptions,

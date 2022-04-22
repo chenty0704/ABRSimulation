@@ -9,7 +9,8 @@ struct DownloadData {
 
 class NetworkModel {
 public:
-    static NetworkModel Import(std::string_view fileName);
+    std::vector<double> DurationsInMs;
+    std::vector<double> ThroughputsInKbps;
 
     DownloadData Download(size_t byteCount);
 
@@ -18,5 +19,4 @@ public:
 private:
     size_t period = 0;
     double timeInPeriodInMs = 0;
-    std::vector<double> durationsInMs, throughputsInKbps;
 };

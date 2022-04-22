@@ -11,7 +11,7 @@
 
 #define LLU_REGISTER_INPUT_TYPE_IMPL(Type, fields)                          \
     NativeWSStream &operator>>(NativeWSStream &stream, Type &obj) {         \
-        ReadStruct(stream,                                                  \
+        ReadObject(stream,                                                  \
                    {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},  \
                    BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields)); \
         return stream;                                                      \
@@ -20,7 +20,7 @@
 
 #define LLU_REGISTER_OUTPUT_TYPE_IMPL(Type, fields)                          \
     NativeWSStream &operator<<(NativeWSStream &stream, const Type &obj) {    \
-        WriteStruct(stream,                                                  \
+        WriteObject(stream,                                                  \
                     {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},  \
                     BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields)); \
         return stream;                                                       \
@@ -47,7 +47,7 @@ namespace LLU {
     }
 
     template<typename... Args>
-    void ReadStruct(NativeWSStream &stream,
+    void ReadObject(NativeWSStream &stream,
                     const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                     Args &... fields) {
         WS::Function head;
@@ -94,7 +94,7 @@ namespace LLU {
     }
 
     template<typename... Args>
-    void WriteStruct(NativeWSStream &stream,
+    void WriteObject(NativeWSStream &stream,
                      const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                      const Args &... fields) {
         stream << WS::Association(sizeof...(Args));

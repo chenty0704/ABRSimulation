@@ -1,20 +1,20 @@
-#include "VideoModel/VideoModel.h"
-#include "NetworkModel/NetworkModel.h"
+#include "Interface/VideoModelInterface.h"
+#include "Interface/NetworkModelInterface.h"
+#include "Interface/ThroughputEstimatorsInterface.h"
+#include "Interface/ABRControllersInterface.h"
 #include "Interface/ABRSimulationInterface.h"
 
 int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
     try {
         LLU::NativeWSStream stream(wslink);
 
-        std::string videoModelFile, networkModelFile;
+        VideoModel videoModel;
+        NetworkModel networkModel;
         std::unique_ptr<IABRController> controller;
         std::unique_ptr<IThroughputEstimator> throughputEstimator;
         SessionOptions opts;
 
-        stream >> LLU::WS::List(7) >> videoModelFile >> networkModelFile >> controller >> throughputEstimator >> opts;
-        const auto videoModel = VideoModel::Import(videoModelFile);
-        auto networkModel = NetworkModel::Import(networkModelFile);
-
+        stream >> LLU::WS::List(7) >> videoModel >> networkModel >> controller >> throughputEstimator >> opts;
         stream << ABRSimulation::SimulateSession(videoModel, networkModel, *controller, *throughputEstimator, opts);
     } catch (const LLU::LibraryLinkError &e) {
         return e.which();

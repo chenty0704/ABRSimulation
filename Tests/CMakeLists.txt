@@ -26,4 +26,4 @@ add_executable(AllTests
         $<TARGET_PROPERTY:ThroughputEstimatorsTest,SOURCES>
         $<TARGET_PROPERTY:ABRSimulationTest,SOURCES>)
 target_link_libraries(AllTests
-        PRIVATE GTest::gtest_main VideoModel NetworkModel ThroughputEstimators ABRControllers ABRSimulation)
+        PRIVATE GTest::gtest_main NetworkModel ThroughputEstimators ABRControllers ABRSimulation)
