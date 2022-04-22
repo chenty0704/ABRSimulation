@@ -2,7 +2,7 @@
 
 #include "NetworkModel/NetworkModel.h"
 
-TEST(NetworkModelTest, Basic) { // NOLINT(cert-err58-cpp)
+TEST(NetworkModelTest, Basic) {
     auto networkModel = NetworkModel::Import("Data/NetworkModels/SampleNetworkModel.json");
     EXPECT_EQ(networkModel.Download(250'000).TimeInMs, 500);
     EXPECT_EQ(networkModel.Download(750'000).TimeInMs, 1'000);

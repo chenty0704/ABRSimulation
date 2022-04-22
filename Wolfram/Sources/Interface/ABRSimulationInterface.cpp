@@ -2,9 +2,9 @@
 #include "NetworkModel/NetworkModel.h"
 #include "Interface/ABRSimulationInterface.h"
 
-int ABRSessionSimulate(WolframLibraryData libData, WSLINK wslink) {
+int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
     try {
-        LLU::WSStream<LLU::WS::Encoding::Native> stream(wslink);
+        LLU::NativeWSStream stream(wslink);
 
         std::string videoModelFile, networkModelFile;
         std::unique_ptr<IABRController> controller;

@@ -1,28 +1,22 @@
 #pragma once
 
-#include <LLU/LLU.h>
-
 #include "ABRSimulation/ABRSimulation.h"
 #include "Interface/CoreInterface.h"
 #include "Interface/ThroughputEstimatorsInterface.h"
 #include "Interface/ABRControllersInterface.h"
 
 namespace LLU {
-    LLU_REGISTER_INPUT_TYPE(
-            SessionOptions,
-            MaxBufferSegmentCount
-    )
+    LLU_REGISTER_INPUT_TYPE(SessionOptions,
+                            MaxBufferSegmentCount)
 
-    LLU_REGISTER_OUTPUT_TYPE(
-            SimulationData,
-            TotalTimeInMs,
-            MaxBufferLevelInMs,
-            BufferedBitRatesInKbps,
-            DownloadDurationsInMs, DownloadBitRatesInKbps,
-            BufferTimesInMs, BufferLevelsInMs,
-            RebufferingPeriodsInMs,
-            FullBufferDelaysInMs
-    )
+    LLU_REGISTER_OUTPUT_TYPE(SimulationData,
+                             TotalTimeInMs,
+                             MaxBufferLevelInMs,
+                             BufferedBitRatesInKbps,
+                             DownloadDurationsInMs, DownloadBitRatesInKbps,
+                             BufferTimesInMs, BufferLevelsInMs,
+                             RebufferingPeriodsInMs,
+                             FullBufferDelaysInMs)
 }
 
 /// \param videoModelFile:String

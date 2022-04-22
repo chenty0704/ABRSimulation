@@ -4,7 +4,7 @@
 #include "ABRControllers/ABRControllers.h"
 #include "ABRSimulation/ABRSimulation.h"
 
-TEST(ABRSimulationTest, Basic) { // NOLINT(cert-err58-cpp)
+TEST(ABRSimulationTest, Basic) {
     const auto videoModel = VideoModel::Import("Data/VideoModels/SampleVideoModel.json");
     auto networkModel = NetworkModel::Import("Data/NetworkModels/SampleNetworkModel.json");
     const std::unique_ptr<IABRController> controller = std::make_unique<ThroughputBasedController>();

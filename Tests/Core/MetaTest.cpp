@@ -2,14 +2,14 @@
 
 #include "Core/Meta.h"
 
-TEST(MetaTest, ForEachRef) { // NOLINT(cert-err58-cpp)
+TEST(MetaTest, ForEachRef) {
     auto a = 1, b = 2;
     ForEachRef([](auto &x) { ++x; }, a, b);
     EXPECT_EQ(a, 2);
     EXPECT_EQ(b, 3);
 }
 
-TEST(MetaTest, ForEachRefUntil) { // NOLINT(cert-err58-cpp)
+TEST(MetaTest, ForEachRefUntil) {
     auto a = 1, b = 2, c = -1, d = 4;
     ForEachRefUntil([](auto &x) { return x <= 0 || (++x, false); }, a, b, c, d);
     EXPECT_EQ(a, 2);
@@ -18,7 +18,7 @@ TEST(MetaTest, ForEachRefUntil) { // NOLINT(cert-err58-cpp)
     EXPECT_EQ(d, 4);
 }
 
-TEST(MetaTest, ForEachRefIndexed) { // NOLINT(cert-err58-cpp)
+TEST(MetaTest, ForEachRefIndexed) {
     auto a = 1, b = 2;
     const std::array values = {1, 2};
     ForEachRefIndexed([&](size_t i, auto &x) { x += values[i]; }, a, b);

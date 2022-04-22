@@ -21,7 +21,7 @@ AppendTo[$LibraryPath, FileNameJoin[{$PacletDirectory, "LibraryResources", $Syst
 Get["LibraryLinkUtilities`"];
 
 `LLU`InitializePacletLibrary["ABRSimulationInterface"];
-`LLU`LazyWSTPFunctionSet @@@ {
+`LLU`WSTPFunctionSet @@@ {
   {$ABRSessionSimulate, "ABRSessionSimulate"}
 };
 

@@ -1,27 +1,20 @@
 #pragma once
 
-#include <LLU/LLU.h>
-
 #include "ABRControllers/ABRControllers.h"
 #include "Interface/CoreInterface.h"
 
 namespace LLU {
-    LLU_REGISTER_INPUT_TYPE(
-            ThroughputBasedControllerOptions,
-            SafetyFactor
-    )
+    LLU_REGISTER_INPUT_TYPE(ThroughputBasedControllerOptions,
+                            SafetyFactor)
 
-    LLU_REGISTER_INPUT_TYPE(
-            ModelPredictiveControllerOptions,
-            TimeIntervalInMs,
-            WindowSize,
-            TargetBufferRatio,
-            BufferDeviationPenaltyFactor,
-            SwitchingCostFactor
-    )
+    LLU_REGISTER_INPUT_TYPE(ModelPredictiveControllerOptions,
+                            TimeIntervalInMs,
+                            WindowSize,
+                            TargetBufferRatio,
+                            BufferDeviationPenaltyFactor,
+                            SwitchingCostFactor)
 
-    template<WS::Encoding EIn, WS::Encoding EOut>
-    auto &operator>>(WSStream<EIn, EOut> &stream, std::unique_ptr<IABRController> &controller) {
+    NativeWSStream &operator>>(NativeWSStream &stream, std::unique_ptr<IABRController> &controller) {
         std::string type;
         stream >> type;
         if (type == "ThroughputBasedController") {

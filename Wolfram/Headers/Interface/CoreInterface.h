@@ -10,8 +10,7 @@
 #define LLU_FIELD_REF_I(r, data, i, name) BOOST_PP_COMMA_IF(i) BOOST_PP_CAT(data, name)
 
 #define LLU_REGISTER_INPUT_TYPE_IMPL(Type, fields)                          \
-    template<WS::Encoding EIn, WS::Encoding EOut>                           \
-    auto &operator>>(WSStream<EIn, EOut> &stream, Type &obj) {              \
+    NativeWSStream &operator>>(NativeWSStream &stream, Type &obj) {         \
         ReadStruct(stream,                                                  \
                    {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},  \
                    BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields)); \
@@ -20,8 +19,7 @@
 #define LLU_REGISTER_INPUT_TYPE(Type, ...) LLU_REGISTER_INPUT_TYPE_IMPL(Type, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
 
 #define LLU_REGISTER_OUTPUT_TYPE_IMPL(Type, fields)                          \
-    template<WS::Encoding EIn, WS::Encoding EOut>                            \
-    auto &operator<<(WSStream<EIn, EOut> &stream, const Type &obj) {         \
+    NativeWSStream &operator<<(NativeWSStream &stream, const Type &obj) {    \
         WriteStruct(stream,                                                  \
                     {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},  \
                     BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields)); \
@@ -30,12 +28,17 @@
 #define LLU_REGISTER_OUTPUT_TYPE(Type, ...) LLU_REGISTER_OUTPUT_TYPE_IMPL(Type, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
 
 namespace LLU {
-    inline const std::vector<std::pair<std::string, std::string>> PacletErrors = { // NOLINT(cert-err58-cpp)
+    using NativeWSStream = WSStream<WS::Encoding::Native>;
+
+    namespace WS {
+        using NativeString = String<WS::Encoding::Native>;
+    }
+
+    inline const std::vector<std::pair<std::string, std::string>> PacletErrors = {
             {"UnknownNameError", "Unknown name `name`"}
     };
 
-    template<WS::Encoding EIn, WS::Encoding EOut>
-    auto &operator>>(WSStream<EIn, EOut> &stream, size_t &value) {
+    inline NativeWSStream &operator>>(NativeWSStream &stream, size_t &value) {
         long long temp;
         stream >> temp;
         assert(temp >= 0);
@@ -43,8 +46,8 @@ namespace LLU {
         return stream;
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut, typename... Args>
-    void ReadStruct(WSStream<EIn, EOut> &stream,
+    template<typename... Args>
+    void ReadStruct(NativeWSStream &stream,
                     const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                     Args &... fields) {
         WS::Function head;
@@ -60,31 +63,29 @@ namespace LLU {
         }
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut>
-    auto &operator<<(WSStream<EIn, EOut> &stream, size_t value) {
+    inline NativeWSStream &operator<<(NativeWSStream &stream, size_t value) {
         assert(value <= std::numeric_limits<long long>::max());
         return stream << static_cast<long long>(value);
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut>
-    auto &operator<<(WSStream<EIn, EOut> &stream, std::string_view str) {
-        WS::String<EOut>::put(stream.get(), str.data(), str.size());
+    inline NativeWSStream &operator<<(NativeWSStream &stream, std::string_view str) {
+        WS::NativeString::put(stream.get(), str.data(), static_cast<int>(str.size()));
         return stream;
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut, typename T>
-    auto &operator<<(WSStream<EIn, EOut> &stream, const std::optional<T> &optional) {
+    template<typename T>
+    NativeWSStream &operator<<(NativeWSStream &stream, const std::optional<T> &optional) {
         if (optional.has_value()) return stream << optional.value();
         return stream << WS::Missing();
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut, typename T1, typename T2>
-    auto &operator<<(WSStream<EIn, EOut> &stream, const std::pair<T1, T2> &pair) {
+    template<typename T1, typename T2>
+    NativeWSStream &operator<<(NativeWSStream &stream, const std::pair<T1, T2> &pair) {
         return stream << WS::List(2) << pair.first << pair.second;
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut, typename... Args>
-    auto &operator<<(WSStream<EIn, EOut> &stream, const std::tuple<Args...> &tuple) {
+    template<typename... Args>
+    NativeWSStream &operator<<(NativeWSStream &stream, const std::tuple<Args...> &tuple) {
         stream << WS::List(sizeof...(Args));
         [&]<std::size_t... Ints>(std::index_sequence<Ints...>) {
             ((stream << std::get<Ints>(tuple)), ...);
@@ -92,8 +93,8 @@ namespace LLU {
         return stream;
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut, typename... Args>
-    void WriteStruct(WSStream<EIn, EOut> &stream,
+    template<typename... Args>
+    void WriteStruct(NativeWSStream &stream,
                      const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                      const Args &... fields) {
         stream << WS::Association(sizeof...(Args));
@@ -102,11 +103,20 @@ namespace LLU {
         }, fields...);
     }
 
-    template<WS::Encoding EIn, WS::Encoding EOut>
-    void Evaluate(WSStream<EIn, EOut> &stream, std::string_view expr) {
-        stream << WS::Function("EvaluatePacket", 1) << WS::Function("ToExpression", 1);
-        WS::String<EOut>::put(stream.get(), expr.data(), expr.size()); // Temporary workaround.
+    template<typename... Args>
+    void EvaluateFunction(NativeWSStream &stream,
+                          const std::array<std::string_view, sizeof...(Args)> &argNames,
+                          std::string_view body,
+                          const Args &... args) {
+        std::array<WS::Symbol, sizeof...(Args)> params;
+        std::transform(argNames.cbegin(), argNames.cend(), params.begin(),
+                       [](std::string_view argName) { return WS::Symbol(std::string(argName)); });
+        stream << WS::Function("EvaluatePacket", 1) << WS::Function("ReleaseHold", 1) << WS::Function("Apply", 2)
+               << WS::Function("Function", 2) << params << WS::Function("Evaluate", 1)
+               << WS::Function("ToExpression", 3) << body << WS::Symbol("InputForm") << WS::Symbol("Hold")
+               << std::tie(args...);
         LibraryData::API()->processWSLINK(stream.get());
+        stream >> LLU::WS::Function("ReturnPacket", 1);
     }
 }
 
