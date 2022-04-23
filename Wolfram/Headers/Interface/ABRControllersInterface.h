@@ -14,7 +14,7 @@ namespace LLU {
                             BufferDeviationPenaltyFactor,
                             SwitchingCostFactor)
 
-    NativeWSStream &operator>>(NativeWSStream &stream, std::unique_ptr<IABRController> &controller) {
+    WSNativeStream &operator>>(WSNativeStream &stream, std::unique_ptr<IABRController> &controller) {
         std::string type;
         stream >> type;
         if (type == "ThroughputBasedController") {

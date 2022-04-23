@@ -20,9 +20,9 @@ namespace LLU {
 /// \param videoModelFile:String
 /// \param networkModelFile:String
 /// \param controllerType:String
-/// \param controllerOptions:List[Rule, ...]
+/// \param controllerOptions:List[Rule, Rule, ...]
 /// \param throughputEstimatorType:String
-/// \param throughputEstimatorOptions:List[Rule, ...]
-/// \param sessionOptions:List[Rule, ...]
+/// \param throughputEstimatorOptions:List[Rule, Rule, ...]
+/// \param sessionOptions:List[Rule, Rule, ...]
 /// \return Association
 extern "C" DLLEXPORT int ABRSessionSimulate(WolframLibraryData libData, WSLINK wslink);

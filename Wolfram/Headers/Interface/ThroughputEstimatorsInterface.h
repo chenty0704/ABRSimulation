@@ -8,7 +8,7 @@ namespace LLU {
                             SlowHalfLifeInMs,
                             FastHalfLifeInMs)
 
-    NativeWSStream &operator>>(NativeWSStream &stream, std::unique_ptr<IThroughputEstimator> &throughputEstimator) {
+    WSNativeStream &operator>>(WSNativeStream &stream, std::unique_ptr<IThroughputEstimator> &throughputEstimator) {
         std::string type;
         stream >> type;
         if (type == "ExponentialMovingAverageEstimator") {

@@ -4,10 +4,13 @@ BeginPackage["ABRSimulation`"];
 
 ImportVideoModel::usage = "ImportVideoModel[videoModelFile] imports a video model from a file.";
 
+VideoModelData::usage = "VideoModelData[videoModel, opts] gives properties of a video model.";
+
 ImportNetworkModel::usage = "ImportNetworkModel[networkModelFile] imports a network model from a file";
 
 ABRSessionSimulate::usage = "ABRSessionSimulate[videoModel, networkModel, opts] simulates an ABR session for a video \
-under the specified network model.";
+under the specified network model.\nABRSessionSimulate[videoModel, {networkModel1, networkModel2, ...}, opts] simulates \
+multiple ABR session for a video under the specified network models.";
 
 ABRSessionPlot::usage = "ABRSessionPlot[simData] visualizes the download activities of an ABR session.";
 
@@ -40,6 +43,19 @@ ImportVideoModel[videoModelFile_String] := With[
   |>
 ];
 
+Options[VideoModelData] = {
+  TargetUnits -> "Kilobits" / "Seconds"
+};
+
+VideoModelData[videoModel_Association, OptionsPattern[]] := With[
+  {realBitRates = videoModel["SegmentSizes"] / videoModel["SegmentDuration"]},
+  Return@Dataset@Table[<|
+    "BitRate" -> videoModel["BitRates"][[i]],
+    "Mean" -> UnitConvert[Mean@realBitRates[[All, i]], OptionValue[TargetUnits]],
+    "StandardDeviation" -> UnitConvert[StandardDeviation@realBitRates[[All, i]], OptionValue[TargetUnits]]
+  |>, {i, Length@videoModel["BitRates"]}]
+];
+
 ImportNetworkModel[networkModelFile_String] := With[
   {networkModel = Import[networkModelFile, "RawJSON"]},
   Return@<|
@@ -61,12 +77,16 @@ Options[ABRSessionSimulate] = {
   "ThroughputEstimator" -> {"ExponentialMovingAverageEstimator", Automatic},
   "SessionOptions" -> Automatic
 };
+
 ABRSessionSimulate[videoModel_Association, networkModel_Association, OptionsPattern[]] := Module[
   {controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData, totalTime},
 
   controllerType = First@OptionValue["Controller"];
   controllerOpts = Rest@OptionValue["Controller"];
-  If[controllerOpts == {Automatic}, controllerOpts = {}];
+  If[controllerOpts == {Automatic}, controllerOpts = Switch[controllerType,
+    "ModelPredictiveController", {"TimeIntervalInMs" -> QuantityMagnitude[videoModel["SegmentDuration"], "Milliseconds"]},
+    _, {}
+  ]];
   throughputEstimatorType = First@OptionValue["ThroughputEstimator"];
   throughputEstimatorOpts = Rest@OptionValue["ThroughputEstimator"];
   If[throughputEstimatorOpts == {Automatic}, throughputEstimatorOpts = {}];
@@ -106,6 +126,9 @@ ABRSessionSimulate[videoModel_Association, networkModel_Association, OptionsPatt
     "FullBufferDelays" -> QuantityArray[simData["FullBufferDelaysInMs"], "Milliseconds"]
   |>
 ];
+
+ABRSessionSimulate[videoModel_Association, networkModels_List, opts : OptionsPattern[]] :=
+    Dataset@Normal@ParallelTable[ABRSessionSimulate[videoModel, networkModel, opts], {networkModel, networkModels}];
 
 ABRSessionPlot[simData_Dataset] := Module[
   {totalSeconds, downloadPlot, bitRateRefLines, rebufferingLines, bufferPlot, maxBufferRefLine},

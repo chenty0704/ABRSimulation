@@ -10,7 +10,7 @@
 #define LLU_FIELD_REF_I(r, data, i, name) BOOST_PP_COMMA_IF(i) BOOST_PP_CAT(data, name)
 
 #define LLU_REGISTER_INPUT_TYPE_IMPL(Type, fields)                          \
-    NativeWSStream &operator>>(NativeWSStream &stream, Type &obj) {         \
+    inline WSNativeStream &operator>>(WSNativeStream &stream, Type &obj) {  \
         ReadObject(stream,                                                  \
                    {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},  \
                    BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields)); \
@@ -18,17 +18,17 @@
     }
 #define LLU_REGISTER_INPUT_TYPE(Type, ...) LLU_REGISTER_INPUT_TYPE_IMPL(Type, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
 
-#define LLU_REGISTER_OUTPUT_TYPE_IMPL(Type, fields)                          \
-    NativeWSStream &operator<<(NativeWSStream &stream, const Type &obj) {    \
-        WriteObject(stream,                                                  \
-                    {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},  \
-                    BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields)); \
-        return stream;                                                       \
+#define LLU_REGISTER_OUTPUT_TYPE_IMPL(Type, fields)                              \
+    inline WSNativeStream &operator<<(WSNativeStream &stream, const Type &obj) { \
+        WriteObject(stream,                                                      \
+                    {BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_NAME_I, _, fields)},      \
+                    BOOST_PP_SEQ_FOR_EACH_I(LLU_FIELD_REF_I, obj., fields));     \
+        return stream;                                                           \
     }
 #define LLU_REGISTER_OUTPUT_TYPE(Type, ...) LLU_REGISTER_OUTPUT_TYPE_IMPL(Type, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))
 
 namespace LLU {
-    using NativeWSStream = WSStream<WS::Encoding::Native>;
+    using WSNativeStream = WSStream<WS::Encoding::Native>;
 
     namespace WS {
         using NativeString = String<WS::Encoding::Native>;
@@ -38,7 +38,7 @@ namespace LLU {
             {"UnknownNameError", "Unknown name `name`"}
     };
 
-    inline NativeWSStream &operator>>(NativeWSStream &stream, size_t &value) {
+    inline WSNativeStream &operator>>(WSNativeStream &stream, size_t &value) {
         long long temp;
         stream >> temp;
         assert(temp >= 0);
@@ -47,7 +47,7 @@ namespace LLU {
     }
 
     template<typename... Args>
-    void ReadObject(NativeWSStream &stream,
+    void ReadObject(WSNativeStream &stream,
                     const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                     Args &... fields) {
         WS::Function head;
@@ -63,29 +63,29 @@ namespace LLU {
         }
     }
 
-    inline NativeWSStream &operator<<(NativeWSStream &stream, size_t value) {
+    inline WSNativeStream &operator<<(WSNativeStream &stream, size_t value) {
         assert(value <= std::numeric_limits<long long>::max());
         return stream << static_cast<long long>(value);
     }
 
-    inline NativeWSStream &operator<<(NativeWSStream &stream, std::string_view str) {
+    inline WSNativeStream &operator<<(WSNativeStream &stream, std::string_view str) {
         WS::NativeString::put(stream.get(), str.data(), static_cast<int>(str.size()));
         return stream;
     }
 
     template<typename T>
-    NativeWSStream &operator<<(NativeWSStream &stream, const std::optional<T> &optional) {
+    WSNativeStream &operator<<(WSNativeStream &stream, const std::optional<T> &optional) {
         if (optional.has_value()) return stream << optional.value();
         return stream << WS::Missing();
     }
 
     template<typename T1, typename T2>
-    NativeWSStream &operator<<(NativeWSStream &stream, const std::pair<T1, T2> &pair) {
+    WSNativeStream &operator<<(WSNativeStream &stream, const std::pair<T1, T2> &pair) {
         return stream << WS::List(2) << pair.first << pair.second;
     }
 
     template<typename... Args>
-    NativeWSStream &operator<<(NativeWSStream &stream, const std::tuple<Args...> &tuple) {
+    WSNativeStream &operator<<(WSNativeStream &stream, const std::tuple<Args...> &tuple) {
         stream << WS::List(sizeof...(Args));
         [&]<std::size_t... Ints>(std::index_sequence<Ints...>) {
             ((stream << std::get<Ints>(tuple)), ...);
@@ -94,7 +94,7 @@ namespace LLU {
     }
 
     template<typename... Args>
-    void WriteObject(NativeWSStream &stream,
+    void WriteObject(WSNativeStream &stream,
                      const std::array<std::string_view, sizeof...(Args)> &fieldNames,
                      const Args &... fields) {
         stream << WS::Association(sizeof...(Args));
@@ -104,7 +104,7 @@ namespace LLU {
     }
 
     template<typename... Args>
-    void EvaluateFunction(NativeWSStream &stream,
+    void EvaluateFunction(WSNativeStream &stream,
                           const std::array<std::string_view, sizeof...(Args)> &argNames,
                           std::string_view body,
                           const Args &... args) {

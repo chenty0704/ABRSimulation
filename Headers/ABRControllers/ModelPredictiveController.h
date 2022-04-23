@@ -13,11 +13,11 @@ struct ModelPredictiveControllerOptions : IABRControllerOptions {
 
 class ModelPredictiveController : public IABRController {
 public:
-    explicit ModelPredictiveController(LLU::NativeWSStream &stream, const ModelPredictiveControllerOptions &opts = {})
+    explicit ModelPredictiveController(LLU::WSNativeStream &stream, const ModelPredictiveControllerOptions &opts = {})
             : stream(stream), IABRController(std::make_unique<ModelPredictiveControllerOptions>(opts)) {}
 
     DownloadDecision GetDownloadDecision(const SessionContext &ctx) override;
 
 private:
-    std::reference_wrapper<LLU::NativeWSStream> stream;
+    std::reference_wrapper<LLU::WSNativeStream> stream;
 };

@@ -20,23 +20,23 @@ DownloadDecision ModelPredictiveController::GetDownloadDecision(const SessionCon
     static constexpr auto cons =
             "Join[{Subscript[x, 1] == x0 - deltaT + omega * deltaT * Subscript[u, 1]}, "
             "Table[Subscript[x, k] == Subscript[x, k - 1] - deltaT + omega * deltaT * Subscript[u, k], {k, 2, K}], "
-            "Table[Subscript[u, k] > 0, {k, K}], "
+            "Table[Subscript[u, k] >= 1 / rMax && Subscript[u, k] <= 1 / rMin, {k, K}], "
             "Table[Subscript[x, k] >= 0 && Subscript[x, k] <= xMax, {k, K}]]";
     static constexpr auto vars = "Join[Table[Subscript[u, k], {k, K}], Table[Subscript[x, k], {k, K}]]";
-    static const auto body = fmt::format("QuadraticOptimization[{obj}, {cons}, {vars}, \"PrimalMinimizer\"]",
-                                         "obj"_a = obj, "cons"_a = cons, "vars"_a = vars);
+    static const auto body = fmt::format(
+            "Quiet[Check["
+            "1 / First@QuadraticOptimization[{obj}, {cons}, {vars}, \"PrimalMinimizer\", \"Method\" -> \"Gurobi\"], "
+            "omega, QuadraticOptimization::dinfeas], QuadraticOptimization::dinfeas]",
+            "obj"_a = obj, "cons"_a = cons, "vars"_a = vars);
 
-    std::vector<double> solutions;
     LLU::EvaluateFunction(stream,
                           {"rMin", "rMax", "xMax", "xOpt", "K", "deltaT", "beta", "gamma", "omega", "u0", "x0"}, body,
                           minBitRateInKbps, maxBitRateInKbps, maxBufferLevelInMs, targetBufferLevelInMs,
                           opts.WindowSize, opts.TimeIntervalInMs,
                           opts.BufferDeviationPenaltyFactor, opts.SwitchingCostFactor,
                           throughputEstimateInKbps, 1 / lastBitRateInKbps, ctx.BufferLevelInMs());
-    stream.get() >> solutions;
-    const auto nextBitRateInKbps =
-            solutions.front() > 0 ? std::clamp(1 / solutions.front(), minBitRateInKbps, maxBitRateInKbps)
-                                  : maxBitRateInKbps;
+    double nextBitRateInKbps;
+    stream.get() >> nextBitRateInKbps;
     const auto it = std::upper_bound(bitRatesInKbps.cbegin(), bitRatesInKbps.cend(), nextBitRateInKbps);
     decision.BitRateID = it != bitRatesInKbps.cbegin() ? it - bitRatesInKbps.cbegin() - 1 : 0;
 

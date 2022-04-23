@@ -6,7 +6,7 @@
 
 int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
     try {
-        LLU::NativeWSStream stream(wslink);
+        LLU::WSNativeStream stream(wslink);
 
         VideoModel videoModel;
         NetworkModel networkModel;
