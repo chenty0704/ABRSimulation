@@ -6,6 +6,6 @@
 namespace LLU {
     LLU_REGISTER_INPUT_TYPE(VideoModel,
                             SegmentDurationInMs,
-                            BitRatesInKbps,
+                            EncodingBitRatesInKbps,
                             SegmentByteCounts)
 }

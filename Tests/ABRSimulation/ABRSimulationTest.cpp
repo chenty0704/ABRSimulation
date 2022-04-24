@@ -7,7 +7,7 @@
 TEST(ABRSimulationTest, Basic) {
     const VideoModel videoModel{
             .SegmentDurationInMs = 2'000,
-            .BitRatesInKbps = {1'000, 2'000, 5'000, 10'000},
+            .EncodingBitRatesInKbps = {1'000, 2'000, 5'000, 10'000},
             .SegmentByteCounts = {
                     {250'000, 500'000, 1'250'000, 2'500'000},
                     {250'000, 500'000, 1'250'000, 2'500'000},

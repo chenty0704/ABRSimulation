@@ -38,7 +38,7 @@ ImportVideoModel[videoModelFile_String] := With[
   {videoModel = Import[videoModelFile, "RawJSON"]},
   Return@<|
     "SegmentDuration" -> Quantity[N@videoModel["SegmentDurationInMs"], "Milliseconds"],
-    "BitRates" -> QuantityArray[N@videoModel["BitRatesInKbps"], "Kilobits" / "Seconds"],
+    "EncodingBitRates" -> QuantityArray[N@videoModel["EncodingBitRatesInKbps"], "Kilobits" / "Seconds"],
     "SegmentSizes" -> QuantityArray[videoModel["SegmentByteCounts"], "Bytes"]
   |>
 ];
@@ -48,12 +48,12 @@ Options[VideoModelData] = {
 };
 
 VideoModelData[videoModel_Association, OptionsPattern[]] := With[
-  {realBitRates = videoModel["SegmentSizes"] / videoModel["SegmentDuration"]},
+  {bitRates = videoModel["SegmentSizes"] / videoModel["SegmentDuration"]},
   Return@Dataset@Table[<|
-    "BitRate" -> videoModel["BitRates"][[i]],
-    "Mean" -> UnitConvert[Mean@realBitRates[[All, i]], OptionValue[TargetUnits]],
-    "StandardDeviation" -> UnitConvert[StandardDeviation@realBitRates[[All, i]], OptionValue[TargetUnits]]
-  |>, {i, Length@videoModel["BitRates"]}]
+    "EncodingBitRate" -> videoModel["EncodingBitRates"][[i]],
+    "Mean" -> UnitConvert[Mean@bitRates[[All, i]], OptionValue[TargetUnits]],
+    "StandardDeviation" -> UnitConvert[StandardDeviation@bitRates[[All, i]], OptionValue[TargetUnits]]
+  |>, {i, Length@videoModel["EncodingBitRates"]}]
 ];
 
 ImportNetworkModel[networkModelFile_String] := With[
@@ -75,11 +75,12 @@ NetworkTimeSeries[networkModel_Association, length_Quantity] := With[
 Options[ABRSessionSimulate] = {
   "Controller" -> {"ModelPredictiveController", Automatic},
   "ThroughputEstimator" -> {"ExponentialMovingAverageEstimator", Automatic},
-  "SessionOptions" -> Automatic
+  "SessionOptions" -> Automatic,
+  "PlaybackTime" -> Automatic
 };
 
 ABRSessionSimulate[videoModel_Association, networkModel_Association, OptionsPattern[]] := Module[
-  {controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, simData, totalTime},
+  {controllerType, controllerOpts, throughputEstimatorType, throughputEstimatorOpts, sessionOpts, playbackTime, simData, totalTime},
 
   controllerType = First@OptionValue["Controller"];
   controllerOpts = Rest@OptionValue["Controller"];
@@ -92,12 +93,19 @@ ABRSessionSimulate[videoModel_Association, networkModel_Association, OptionsPatt
   If[throughputEstimatorOpts == {Automatic}, throughputEstimatorOpts = {}];
   sessionOpts = OptionValue["SessionOptions"];
   If[sessionOpts == Automatic, sessionOpts = {}];
+  playbackTime = OptionValue["PlaybackTime"];
 
   simData = $ABRSessionSimulate[
     <|
       "SegmentDurationInMs" -> QuantityMagnitude[videoModel["SegmentDuration"], "Milliseconds"],
-      "BitRatesInKbps" -> QuantityMagnitude[videoModel["BitRates"], "Kilobits" / "Seconds"],
-      "SegmentByteCounts" -> QuantityMagnitude[videoModel["SegmentSizes"], "Bytes"]
+      "EncodingBitRatesInKbps" -> QuantityMagnitude[videoModel["EncodingBitRates"], "Kilobits" / "Seconds"],
+      "SegmentByteCounts" -> QuantityMagnitude[
+        If[playbackTime === Automatic,
+          videoModel["SegmentSizes"],
+          With[{segmentCount = Ceiling[playbackTime / videoModel["SegmentDuration"]]},
+            Take[Join @@ Table[videoModel["SegmentSizes"], Ceiling[segmentCount / Length@videoModel["SegmentSizes"]]], segmentCount]
+          ]
+        ], "Bytes"]
     |>,
     <|
       "DurationsInMs" -> QuantityMagnitude[networkModel["Durations"], "Milliseconds"],
@@ -111,7 +119,7 @@ ABRSessionSimulate[videoModel_Association, networkModel_Association, OptionsPatt
   Return@Dataset@<|
     "TotalTime" -> totalTime,
     "MaxBufferLevel" -> Quantity[simData["MaxBufferLevelInMs"], "Milliseconds"],
-    "EncodingBitRates" -> videoModel["BitRates"],
+    "EncodingBitRates" -> videoModel["EncodingBitRates"],
     "BufferedBitRates" -> QuantityArray[simData["BufferedBitRatesInKbps"], "Kilobits" / "Seconds"],
     "NetworkTimeSeries" -> NetworkTimeSeries[networkModel, totalTime],
     "DownloadTimeSeries" -> FromDurationsAndValues[
@@ -144,7 +152,7 @@ ABRSessionPlot[simData_Dataset] := Module[
   ];
   downloadPlot = Show[
     downloadPlot, bitRateRefLines,
-    PlotRange -> All, AxesLabel -> {"Time (s)", "Bit Rate (Mb/s)"},
+    AxesLabel -> {"Time (s)", "Bit Rate (Mb/s)"},
     AspectRatio -> Full, ImageSize -> {Full, Tiny}
   ];
   rebufferingLines = If[Length@simData["RebufferingPeriods"] == 0, {},

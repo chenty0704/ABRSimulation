@@ -26,7 +26,8 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
     const auto UpdateBuffer = [&](DownloadDecision decision) {
         simData.BufferTimesInMs.push_back(simData.TotalTimeInMs);
         simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());
-        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.BitRatesInKbps.at(decision.BitRateID);
+        simData.BufferedBitRatesInKbps.at(decision.SegmentID) = videoModel.EncodingBitRatesInKbps.at(
+                decision.BitRateID);
         if (decision.SegmentID == ctx.NextSegmentID) ++ctx.NextSegmentID;
         simData.BufferTimesInMs.push_back(simData.TotalTimeInMs + 1);
         simData.BufferLevelsInMs.push_back(ctx.BufferLevelInMs());

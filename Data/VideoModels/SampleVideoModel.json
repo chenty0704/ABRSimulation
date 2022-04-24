@@ -1,6 +1,6 @@
 {
   "SegmentDurationInMs": 2000,
-  "BitRatesInKbps": [1000, 2000, 5000, 10000],
+  "EncodingBitRatesInKbps": [1000, 2000, 5000, 10000],
   "SegmentByteCounts": [
     [250000, 500000, 1250000, 2500000],
     [250000, 500000, 1250000, 2500000],

@@ -4,7 +4,7 @@
 
 struct VideoModel {
     double SegmentDurationInMs;
-    std::vector<double> BitRatesInKbps;
+    std::vector<double> EncodingBitRatesInKbps;
     std::vector<std::vector<size_t>> SegmentByteCounts;
 
     [[nodiscard]] size_t SegmentCount() const {

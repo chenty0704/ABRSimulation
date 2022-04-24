@@ -4,7 +4,7 @@ DownloadDecision ModelPredictiveController::GetDownloadDecision(const SessionCon
     const auto &opts = dynamic_cast<const ModelPredictiveControllerOptions &>(*ModelPredictiveController::opts);
     DownloadDecision decision{.SegmentID = ctx.NextSegmentID};
 
-    const auto &bitRatesInKbps = ctx.VideoModel.get().BitRatesInKbps;
+    const auto &bitRatesInKbps = ctx.VideoModel.get().EncodingBitRatesInKbps;
     const auto minBitRateInKbps = bitRatesInKbps.front(), maxBitRateInKbps = bitRatesInKbps.back();
     const auto maxBufferLevelInMs =
             static_cast<double>(ctx.MaxBufferSegmentCount) * ctx.VideoModel.get().SegmentDurationInMs;
