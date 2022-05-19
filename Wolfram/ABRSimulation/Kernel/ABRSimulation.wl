@@ -98,10 +98,15 @@ Options[ABRSessionPlot] = {
     "InlineDisplay" -> True
 };
 
+Options[ABRSessionPlot] = {
+    WindowSize -> Quantity[1, "Minutes"]
+};
+
 ABRSessionPlot[simData_Dataset, OptionsPattern[]] := Module[
-    {totalSeconds, downloadPlot, bitRateRefLines, rebufferingLines, bufferPlot, maxBufferRefLine},
+    {totalSeconds, maxBufferSeconds, downloadPlot, rebufferingLines, bufferPlot, windowSeconds},
 
     totalSeconds = QuantityMagnitude[simData["TotalTime"], "Seconds"];
+    maxBufferSeconds = QuantityMagnitude[simData["MaxBufferLevel"], "Seconds"];
 
     downloadPlot = ListStepPlot[
         {simData["DownloadTimeSeries"], simData["NetworkTimeSeries"]}, Left,
@@ -109,7 +114,7 @@ ABRSessionPlot[simData_Dataset, OptionsPattern[]] := Module[
         TargetUnits -> "Megabits" / "Seconds", AxesOrigin -> {0, 0},
         PlotRange -> {{0, totalSeconds}, Automatic}, PlotRangePadding -> {0.4, Scaled[0.02]},
         Frame -> True, FrameLabel -> {"Time (s)", "Bit Rate (Mb/s)"},
-        PlotLegends -> {"Download Bit Rate", "Network Throughput"},
+        PlotLegends -> Placed[{"Download Bit Rate", "Network Throughput"}, Below],
         AspectRatio -> Full, ImageSize -> {Full, Small}
     ];
 
@@ -119,14 +124,23 @@ ABRSessionPlot[simData_Dataset, OptionsPattern[]] := Module[
         simData["BufferTimeSeries"], Epilog -> rebufferingLines,
         GridLines -> {None, {simData["MaxBufferLevel"]}}, GridLinesStyle -> Directive[Gray, Dashing[0, Tiny]],
         TargetUnits -> "Seconds", AxesOrigin -> {0, 0},
-        PlotRange -> {{0, totalSeconds}, {0, QuantityMagnitude[simData["MaxBufferLevel"], "Seconds"]}},
-        PlotRangePadding -> {0.4, Scaled[0.02]},
+        PlotRange -> {{0, totalSeconds}, {0, maxBufferSeconds}}, PlotRangePadding -> {0.4, Scaled[0.02]},
         Frame -> True, FrameLabel -> {"Time (s)", "Buffer Level (s)"},
-        PlotLegends -> {"Current Buffer Level"},
+        PlotLegends -> Placed[{"Current Buffer Level"}, Below],
         AspectRatio -> Full, ImageSize -> {Full, Small}
     ];
 
-    Return@Column[{downloadPlot, bufferPlot}, ItemSize -> Full]
+    windowSeconds = QuantityMagnitude[OptionValue[WindowSize], "Seconds"];
+    Return@If[totalSeconds <= windowSeconds,
+        Column[{downloadPlot, bufferPlot}, ItemSize -> Full],
+        Manipulate[
+            Column[{
+                Show[downloadPlot, PlotRange -> {{startSeconds, startSeconds + windowSeconds}, Automatic}],
+                Show[bufferPlot, PlotRange -> {{startSeconds, startSeconds + windowSeconds}, {0, maxBufferSeconds}}]
+            }, ItemSize -> Full],
+            {{startSeconds, 0, "Window Start Seconds"}, 0, totalSeconds - windowSeconds}
+        ]
+    ]
 ];
 
 End[];
