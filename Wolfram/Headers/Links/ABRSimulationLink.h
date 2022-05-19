@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ABRSimulation/ABRSimulation.h"
-#include "Interface/CoreInterface.h"
+#include "Links/CoreLink.h"
 
 namespace LLU {
     LLU_REGISTER_INPUT_TYPE(SessionOptions,
@@ -17,12 +17,12 @@ namespace LLU {
                              FullBufferDelaysInMs)
 }
 
-/// \param videoModelFile:String
-/// \param networkModelFile:String
-/// \param controllerType:String
-/// \param controllerOptions:List[Rule, Rule, ...]
-/// \param throughputEstimatorType:String
-/// \param throughputEstimatorOptions:List[Rule, Rule, ...]
-/// \param sessionOptions:List[Rule, Rule, ...]
+/// \param videoModel:_VideoModel
+/// \param netModel:_NetworkModel
+/// \param controllerType:_String
+/// \param controllerOpts:OptionsPattern[]
+/// \param throughputEstimatorType:_String
+/// \param throughputEstimatorOpts:OptionsPattern[]
+/// \param sessionOpts:OptionsPattern[]
 /// \return Association
 extern "C" DLLEXPORT int ABRSessionSimulate(WolframLibraryData libData, WSLINK wslink);

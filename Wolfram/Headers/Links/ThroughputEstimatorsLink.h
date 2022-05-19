@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ThroughputEstimators/ThroughputEstimators.h"
-#include "Interface/CoreInterface.h"
+#include "Links/CoreLink.h"
 
 namespace LLU {
     LLU_REGISTER_INPUT_TYPE(ExponentialMovingAverageEstimatorOptions,

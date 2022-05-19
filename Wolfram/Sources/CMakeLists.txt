@@ -1,6 +1,6 @@
-add_library(ABRSimulationInterface SHARED
-        Interface/CoreInterface.cpp
-        Interface/ABRSimulationInterface.cpp)
-target_link_libraries(ABRSimulationInterface
+add_library(ABRSimulationLink SHARED
+        Links/CoreLink.cpp
+        Links/ABRSimulationLink.cpp)
+target_link_libraries(ABRSimulationLink
         PRIVATE LLU::LLU ABRSimulation)
-set_property(TARGET ABRSimulationInterface PROPERTY PREFIX "")
+set_property(TARGET ABRSimulationLink PROPERTY PREFIX "")

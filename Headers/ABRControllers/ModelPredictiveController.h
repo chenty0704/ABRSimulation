@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ABRControllers/ABRControllers.h"
-#include "Interface/CoreInterface.h"
+#include "Links/CoreLink.h"
 
 struct ModelPredictiveControllerOptions : IABRControllerOptions {
     double TimeIntervalInMs = 2'000;

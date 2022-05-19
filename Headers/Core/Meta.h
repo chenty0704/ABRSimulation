@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Core/Core.h"
+#include <tuple>
+#include <utility>
 
 template<typename Fun, typename... Args>
 constexpr void ForEachRef(Fun &&f, Args &...args) {

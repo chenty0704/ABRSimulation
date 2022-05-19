@@ -1,4 +1,4 @@
-#include "Interface/CoreInterface.h"
+#include "Links/CoreLink.h"
 
 int WolframLibrary_initialize(WolframLibraryData libData) {
     try {

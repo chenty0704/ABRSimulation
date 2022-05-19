@@ -1,8 +1,8 @@
-#include "Interface/VideoModelInterface.h"
-#include "Interface/NetworkModelInterface.h"
-#include "Interface/ThroughputEstimatorsInterface.h"
-#include "Interface/ABRControllersInterface.h"
-#include "Interface/ABRSimulationInterface.h"
+#include "Links/VideoModelLink.h"
+#include "Links/NetworkModelLink.h"
+#include "Links/ThroughputEstimatorsLink.h"
+#include "Links/ABRControllersLink.h"
+#include "Links/ABRSimulationLink.h"
 
 int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
     try {

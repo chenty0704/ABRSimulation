@@ -19,8 +19,7 @@ SimulationData ABRSimulation::SimulateSession(const VideoModel &videoModel,
         const auto downloadData = networkModel.Download(segmentByteCount);
         throughputEstimator.Push(downloadData);
         simData.DownloadDurationsInMs.push_back(downloadData.TimeInMs);
-        simData.DownloadBitRatesInKbps.push_back(
-                static_cast<double>(segmentByteCount * CHAR_BIT) / videoModel.SegmentDurationInMs);
+        simData.DownloadBitRatesInKbps.push_back(videoModel.EncodingBitRatesInKbps.at(decision.BitRateID));
         return downloadData;
     };
     const auto UpdateBuffer = [&](DownloadDecision decision) {

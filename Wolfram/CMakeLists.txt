@@ -5,6 +5,6 @@ endif ()
 
 add_subdirectory(Sources)
 
-install_paclet_files(TARGET ABRSimulationInterface
+install_paclet_files(TARGET ABRSimulationLink
         LLU_LOCATION ${LLU_ROOT}
         PACLET_NAME ABRSimulation)
