@@ -4,9 +4,9 @@
 #include "Links/ABRControllersLink.h"
 #include "Links/ABRSimulationLink.h"
 
-int ABRSessionSimulate(WolframLibraryData, WSLINK wslink) {
+int ABRSessionSimulate(WolframLibraryData, WSLINK link) {
     try {
-        LLU::WSNativeStream stream(wslink);
+        LLU::WSNativeStream stream(link);
 
         VideoModel videoModel;
         NetworkModel networkModel;

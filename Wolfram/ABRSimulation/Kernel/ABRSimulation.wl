@@ -1,11 +1,10 @@
 (* ::Package:: *)
 
-$PacletDirectory = FileNameDrop[$InputFileName, -2];
-AppendTo[$Path, FileNameJoin[{$PacletDirectory, "Kernel"}]];
-AppendTo[$Path, FileNameJoin[{$PacletDirectory, "LibraryResources"}]];
-AppendTo[$LibraryPath, FileNameJoin[{$PacletDirectory, "LibraryResources", $SystemID}]];
+Get["LibraryLinkUtilities`"];
 
 BeginPackage["ABRSimulation`"];
+
+Once@AppendTo[$Path, DirectoryName[$InputFileName]];
 
 Get["VideoModel`"];
 Get["NetworkModel`"];
@@ -14,16 +13,18 @@ ABRSessionSimulate::usage = "ABRSessionSimulate[videoModel, netModel, opts] simu
 the specified network model.\nABRSessionSimulate[videoModel, {netModel1, netModel2, ...}, opts] simulates multiple ABR \
 sessions for a video under the specified network models.";
 
-ABRSessionPlot::usage = "ABRSessionPlot[simData, opts] visualizes the download activities during an ABR session.";
+ABRSessionPlot::usage = "ABRSessionPlot[simData] visualizes the download activities during an ABR session.";
 
 Begin["`Private`"];
 
-Get["LibraryLinkUtilities`"];
+LoadPacletLibrary[] := (
+    Global`LLU`InitializePacletLibrary["ABRSimulationLink"];
+    Global`LLU`WSTPFunctionSet[$ABRSessionSimulate];
+);
 
-`LLU`InitializePacletLibrary["ABRSimulationLink"];
-`LLU`WSTPFunctionSet @@@ {
-    {$ABRSessionSimulate, "ABRSessionSimulate"}
-};
+UnloadPacletLibrary[] := Do[LibraryUnload["ABRSimulationLink"], 2];
+
+LoadPacletLibrary[];
 
 Options[ABRSessionSimulate] = {
     "Controller" -> {"ModelPredictiveController", Automatic},
@@ -94,16 +95,8 @@ ABRSessionSimulate[VideoModel[video_?AssociationQ], NetworkModel[net_?Associatio
 ABRSessionSimulate[videoModel_VideoModel, netModels_ /; VectorQ, opts : OptionsPattern[]] :=
         Dataset@Normal@ParallelTable[ABRSessionSimulate[videoModel, netModel, opts], {netModel, netModels}];
 
-Options[ABRSessionPlot] = {
-    "InlineDisplay" -> True
-};
-
-Options[ABRSessionPlot] = {
-    WindowSize -> Quantity[1, "Minutes"]
-};
-
-ABRSessionPlot[simData_Dataset, OptionsPattern[]] := Module[
-    {totalSeconds, maxBufferSeconds, downloadPlot, rebufferingLines, bufferPlot, windowSeconds},
+ABRSessionPlot[simData_Dataset] := Module[
+    {totalSeconds, maxBufferSeconds, downloadPlot, rebufferingLines, bufferPlot},
 
     totalSeconds = QuantityMagnitude[simData["TotalTime"], "Seconds"];
     maxBufferSeconds = QuantityMagnitude[simData["MaxBufferLevel"], "Seconds"];
@@ -130,16 +123,13 @@ ABRSessionPlot[simData_Dataset, OptionsPattern[]] := Module[
         AspectRatio -> Full, ImageSize -> {Full, Small}
     ];
 
-    windowSeconds = QuantityMagnitude[OptionValue[WindowSize], "Seconds"];
-    Return@If[totalSeconds <= windowSeconds,
-        Column[{downloadPlot, bufferPlot}, ItemSize -> Full],
-        Manipulate[
-            Column[{
-                Show[downloadPlot, PlotRange -> {{startSeconds, startSeconds + windowSeconds}, Automatic}],
-                Show[bufferPlot, PlotRange -> {{startSeconds, startSeconds + windowSeconds}, {0, maxBufferSeconds}}]
-            }, ItemSize -> Full],
-            {{startSeconds, 0, "Window Start Seconds"}, 0, totalSeconds - windowSeconds}
-        ]
+    Manipulate[
+        Column[{
+            Show[downloadPlot, PlotRange -> {{firstSecond, firstSecond + plotSeconds}, Automatic}],
+            Show[bufferPlot, PlotRange -> {{firstSecond, firstSecond + plotSeconds}, {0, maxBufferSeconds}}]
+        }, ItemSize -> Full],
+        {{firstSecond, 0, "First Second"}, 0, totalSeconds},
+        {{plotSeconds, 60, "Plot Seconds"}, 10, 120, 10}
     ]
 ];
 

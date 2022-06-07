@@ -25,4 +25,4 @@ namespace LLU {
 /// \param throughputEstimatorOpts:OptionsPattern[]
 /// \param sessionOpts:OptionsPattern[]
 /// \return Association
-extern "C" DLLEXPORT int ABRSessionSimulate(WolframLibraryData libData, WSLINK wslink);
+extern "C" DLLEXPORT int ABRSessionSimulate(WolframLibraryData libData, WSLINK link);

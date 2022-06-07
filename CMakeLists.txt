@@ -18,4 +18,4 @@ include_directories(Wolfram/Headers)
 
 add_subdirectory(Sources)
 add_subdirectory(Tests)
-add_subdirectory(Wolfram)
+add_subdirectory(Wolfram/Sources)
